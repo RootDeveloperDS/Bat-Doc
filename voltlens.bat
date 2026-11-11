@@ -31,11 +31,12 @@ if not exist "%TEMPLATE%" (
 
 set "OUTPUT_FILE=%USERPROFILE%\Desktop\VoltLens-Battery-Report.html"
 
-:: 2. Inject raw report into standalone template using native PowerShell
+:: 2. Inject raw report as clean Base64 to prevent HTML corruption
 powershell -NoProfile -Command ^
-    "$raw = Get-Content -LiteralPath '%RAW_FILE%' -Raw -Encoding UTF8;" ^
+    "$rawBytes = [System.IO.File]::ReadAllBytes('%RAW_FILE%');" ^
+    "$b64 = [Convert]::ToBase64String($rawBytes);" ^
     "$tmpl = Get-Content -LiteralPath '%TEMPLATE%' -Raw -Encoding UTF8;" ^
-    "$final = $tmpl.Replace('/*INJECT_RAW_REPORT_HERE*/', $raw);" ^
+    "$final = $tmpl.Replace('__RAW_REPORT_BASE64_PAYLOAD__', $b64);" ^
     "[System.IO.File]::WriteAllText('%OUTPUT_FILE%', $final, [System.Text.Encoding]::UTF8);"
 
 if not exist "%OUTPUT_FILE%" (

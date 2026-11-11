@@ -5,119 +5,394 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VoltLens â€” Battery Intelligence Diagnostic</title>
   <style>
-    /* VoltLens Embedded Light Theme */
-    :root {
-      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --bg-app: #f8fafc;
-      --bg-card: #ffffff;
-      --bg-subtle: #f1f5f9;
-      --border-color: #e2e8f0;
-      --border-focus: #38bdf8;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --text-faint: #94a3b8;
-      --primary: #0284c7;
-      --primary-hover: #0369a1;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 16px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font-family); background-color: var(--bg-app); color: var(--text-main); line-height: 1.5; -webkit-font-smoothing: antialiased; }
-    .container { max-width: 1140px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); }
-    .brand { display: flex; align-items: center; gap: 0.75rem; }
-    .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #0284c7, #38bdf8); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; }
-    .brand-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
-    .brand-tagline { font-size: 0.85rem; color: var(--text-muted); }
-    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
-    .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-    .badge-pristine { background: #dcfce7; color: #15803d; }
-    .badge-excellent { background: #e0f2fe; color: #0369a1; }
-    .badge-good { background: #f0fdf4; color: #166534; }
-    .badge-moderate { background: #fef3c7; color: #b45309; }
-    .badge-degraded { background: #fee2e2; color: #b91c1c; }
-    .badge-critical { background: #ffe4e6; color: #9f1239; }
-    .proof-pill { font-size: 0.7rem; color: var(--text-muted); background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.15rem 0.45rem; cursor: help; }
-    .dropzone { border: 2px dashed #cbd5e1; background: #ffffff; border-radius: var(--radius-lg); padding: 3.5rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s ease; margin-bottom: 2rem; }
-    .dropzone:hover, .dropzone.drag-active { border-color: var(--primary); background: #f0f9ff; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; border: none; text-decoration: none; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-secondary { background: var(--bg-subtle); color: var(--text-main); border: 1px solid var(--border-color); }
-    .btn-secondary:hover { background: #e2e8f0; }
-    .flex { display: flex; }
-    .flex-wrap { flex-wrap: wrap; }
-    .items-center { align-items: center; }
-    .items-start { align-items: flex-start; }
-    .justify-between { justify-content: space-between; }
-    .justify-center { justify-content: center; }
-    .flex-col { flex-direction: column; }
-    .gap-1 { gap: 0.25rem; }
-    .gap-2 { gap: 0.5rem; }
-    .gap-3 { gap: 0.75rem; }
-    .gap-4 { gap: 1rem; }
-    .gap-5 { gap: 1.25rem; }
-    .gap-6 { gap: 1.5rem; }
-    .space-y-1 > * + * { margin-top: 0.25rem; }
-    .space-y-2 > * + * { margin-top: 0.5rem; }
-    .space-y-3 > * + * { margin-top: 0.75rem; }
-    .space-y-4 > * + * { margin-top: 1rem; }
-    .text-xs { font-size: 0.75rem; }
-    .text-sm { font-size: 0.875rem; }
-    .text-base { font-size: 1rem; }
-    .text-lg { font-size: 1.125rem; }
-    .text-2xl { font-size: 1.5rem; }
-    .font-bold { font-weight: 700; }
-    .font-semibold { font-weight: 600; }
-    .font-medium { font-weight: 500; }
-    .text-slate-400 { color: #94a3b8; }
-    .text-slate-500 { color: #64748b; }
-    .text-slate-600 { color: #475569; }
-    .text-slate-700 { color: #334155; }
-    .text-slate-800 { color: #1e293b; }
-    .text-slate-900 { color: #0f172a; }
-    .text-rose-600 { color: #e11d48; }
-    .text-sky-700 { color: #0369a1; }
-    .w-full { width: 100%; }
-    .rounded-full { border-radius: 9999px; }
-    .rounded-lg { border-radius: var(--radius-md); }
-    .p-3 { padding: 0.75rem; }
-    .mb-1 { margin-bottom: 0.25rem; }
-    .mb-2 { margin-bottom: 0.5rem; }
-    .mb-4 { margin-bottom: 1rem; }
-    .mb-6 { margin-bottom: 1.5rem; }
-    .border-t { border-top: 1px solid var(--border-color); }
-    .pt-3 { padding-top: 0.75rem; }
-    .relative { position: relative; }
-    .absolute { position: absolute; }
-    .transform { transform: rotate(-90deg); }
-    .overflow-hidden { overflow: hidden; }
-    .border { border: 1px solid var(--border-color); }
-    .bg-slate-50 { background-color: #f8fafc; }
-    .bg-slate-100 { background-color: #f1f5f9; }
-    .bg-rose-500 { background-color: #f43f5e; }
-    .bg-indigo-500 { background-color: #6366f1; }
-    .bg-sky-500 { background-color: #0ea5e9; }
-    .bg-emerald-500 { background-color: #10b981; }
-    .border-rose-200 { border-color: #fecdd3; }
-    .bg-rose-50 { background-color: #fff1f2; }
-    .text-rose-900 { color: #881337; }
-    .border-amber-200 { border-color: #fde68a; }
-    .bg-amber-50 { background-color: #fffbeb; }
-    .text-amber-900 { color: #78350f; }
-    .border-sky-200 { border-color: #bae6fd; }
-    .bg-sky-50 { background-color: #f0f9ff; }
-    .text-sky-900 { color: #0c4a6e; }
-    @media print { .no-print { display: none !important; } .card { box-shadow: none !important; border: 1px solid #ddd; } }
-  </style>
+/* VoltLens God-Level Light Design System */
+:root {
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #f8fafc;
+  --bg-hover: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-focus: #0284c7;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+  
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-light: #e0f2fe;
+  
+  --success: #10b981;
+  --success-light: #dcfce7;
+  --success-text: #15803d;
+  
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --warning-text: #b45309;
+  
+  --danger: #ef4444;
+  --danger-light: #fee2e2;
+  --danger-text: #b91c1c;
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 9999px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.brand-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.4rem;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+.brand-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+}
+
+.brand-tagline {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Navigation Tabs */
+.tabs-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.25rem;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: none;
+  background: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+  background-color: var(--bg-hover);
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  background-color: white;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--primary);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #cbd5e1;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-pristine { background: var(--success-light); color: var(--success-text); }
+.badge-excellent { background: var(--primary-light); color: var(--primary); }
+.badge-good { background: #f0fdf4; color: #166534; }
+.badge-moderate { background: var(--warning-light); color: var(--warning-text); }
+.badge-degraded { background: var(--danger-light); color: var(--danger-text); }
+.badge-critical { background: #ffe4e6; color: #9f1239; }
+
+/* Proof Pill (Grounding badge) */
+.proof-pill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.proof-pill:hover {
+  background: #e2e8f0;
+  color: var(--text-main);
+  border-color: #94a3b8;
+}
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed #cbd5e1;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 4.5rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.dropzone:hover, .dropzone.drag-active {
+  border-color: var(--primary);
+  background: #f0f9ff;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.12);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 8px rgba(2, 132, 199, 0.3);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: #cbd5e1;
+}
+
+/* Tables */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.data-table th {
+  background: var(--bg-card-subtle);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-main);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover td {
+  background-color: var(--bg-hover);
+}
+
+/* Certificate View */
+.certificate-frame {
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 3rem;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+.certificate-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  font-size: 6rem;
+  font-weight: 900;
+  color: rgba(2, 132, 199, 0.04);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Utilities */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
+.space-y-1 > * + * { margin-top: 0.25rem; }
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.space-y-3 > * + * { margin-top: 0.75rem; }
+.space-y-4 > * + * { margin-top: 1rem; }
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+.text-3xl { font-size: 1.875rem; }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+.text-slate-400 { color: var(--text-faint); }
+.text-slate-500 { color: var(--text-muted); }
+.text-slate-600 { color: #475569; }
+.text-slate-700 { color: #334155; }
+.text-slate-800 { color: #1e293b; }
+.text-slate-900 { color: var(--text-main); }
+.text-rose-600 { color: var(--danger); }
+.text-emerald-600 { color: var(--success); }
+.text-sky-600 { color: var(--primary); }
+.text-sky-700 { color: var(--primary-hover); }
+.w-full { width: 100%; }
+.rounded-full { border-radius: var(--radius-full); }
+.rounded-lg { border-radius: var(--radius-md); }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.border-t { border-top: 1px solid var(--border-color); }
+.pt-3 { padding-top: 0.75rem; }
+.relative { position: relative; }
+.absolute { position: absolute; }
+.overflow-hidden { overflow: hidden; }
+
+@media print {
+  body { background: white; }
+  .no-print { display: none !important; }
+  .card { box-shadow: none !important; border: 1px solid #ddd; }
+}
+
+</style>
 </head>
 <body>
   <div class="container">
@@ -157,8 +432,8 @@
     <main id="dashboard-view" style="display:none;"></main>
   </div>
 
-  <!-- Raw Report Injected Placeholder for 1-Click Batch Execution -->
-  <script id="embedded-report-data" type="text/plain">/*INJECT_RAW_REPORT_HERE*/</script>
+  <!-- Raw Report Injected Placeholder for 1-Click Batch Execution (Base64 Encoded) -->
+  <script id="embedded-report-base64" type="text/plain">__RAW_REPORT_BASE64_PAYLOAD__</script>
 
   <script>
 // --- PARSER ---
@@ -1061,171 +1336,328 @@ function generateRecommendations(health, standby, habits, battery) {
 
 // --- UI ---
 /**
- * VoltLens UI Rendering Engine
- * Translates parsed data and analytical insights into a high-grade light dashboard.
+ * VoltLens God-Level UI Engine
+ * Modular tabbed navigation, rich data views, and exportable Battery Certificate.
  */
 
 
 
 function renderDashboard(data, analysis) {
-  const { systemInfo, batteries } = data;
+  const { systemInfo, batteries, capacityHistory, recentUsage } = data;
   const battery = batteries[0] || {};
   const { health, runtime, standby, degradation, habits, recommendations } = analysis;
 
   return `
     <!-- Top System Spec Bar -->
-    <div class="card mb-6 bg-slate-50 border-slate-200">
+    <div class="card mb-6" style="background: linear-gradient(to right, #ffffff, #f8fafc);">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Device Hardware</span>
-          <h2 class="text-lg font-bold text-slate-900">${systemInfo.systemProductName}</h2>
-          <p class="text-xs text-slate-500">${systemInfo.computerName} â€¢ BIOS ${systemInfo.bios} â€¢ OS ${systemInfo.osBuild.split('.')[0]}</p>
+          <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">Verified System Hardware</span>
+          <h2 class="text-xl font-bold text-slate-900">${systemInfo.systemProductName}</h2>
+          <p class="text-xs text-slate-500 mt-1">Host: <strong>${systemInfo.computerName}</strong> â€¢ BIOS: <strong>${systemInfo.bios}</strong> â€¢ OS: <strong>${systemInfo.osBuild.split('.')[0]}</strong></p>
         </div>
         <div class="flex items-center gap-6 text-sm">
           <div>
-            <span class="text-xs text-slate-500 block">Battery Model</span>
+            <span class="text-xs text-slate-400 block">Battery Model</span>
             <span class="font-semibold text-slate-800">${battery.name || 'OEM Battery'} (${battery.chemistry || 'LiP'})</span>
           </div>
           <div>
-            <span class="text-xs text-slate-500 block">Report Date</span>
+            <span class="text-xs text-slate-400 block">Serial Number</span>
+            <span class="font-semibold text-slate-800">${battery.serialNumber || 'N/A'}</span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 block">Report Time</span>
             <span class="font-semibold text-slate-800">${systemInfo.reportTime}</span>
           </div>
           <button onclick="window.print()" class="btn btn-secondary text-xs no-print">
-            ðŸ–¨ï¸ Export / Print PDF
+            ðŸ–¨ï¸ Print / Save PDF
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 3 Core Hero Cards -->
-    <div class="grid-3">
-      <!-- Hero 1: Battery Health -->
-      <div class="card">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="font-bold text-slate-800 text-base">Battery Health Score</h3>
-            <p class="text-xs text-slate-500">True chemical retention vs factory spec</p>
-          </div>
-          <span class="proof-pill" title="${health.proof}">Proof â„¹ï¸</span>
-        </div>
-        <div class="flex items-center gap-5 my-3">
-          ${renderCircularGauge(health.healthPercent, health.grade)}
-          <div class="space-y-1">
-            <p class="text-xs font-semibold text-slate-700">${health.summary}</p>
-            <p class="text-xs text-slate-500">Lost Capacity: <span class="font-bold text-rose-600">${health.lostCapacityMWh.toLocaleString()} mWh</span> (-${health.lostPercent}%)</p>
-          </div>
-        </div>
-        <div class="pt-3 border-t border-slate-100 flex justify-between text-xs text-slate-600">
-          <span>Design: <strong>${(health.designCapacityMWh || 0).toLocaleString()} mWh</strong></span>
-          <span>Current: <strong>${(health.fullChargeCapacityMWh || 0).toLocaleString()} mWh</strong></span>
-        </div>
-        <div class="mt-2 text-xs text-slate-400">
-          Hardware Cycles: ${health.cycleCount.isHardwareReported ? health.cycleCount.value : '<span title="OEM sensor omitted cycle counter in hardware">Not reported by OEM (-)</span>'}
-        </div>
-      </div>
-
-      <!-- Hero 2: Lost Runtime -->
-      <div class="card">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="font-bold text-slate-800 text-base">Lost Portable Runtime</h3>
-            <p class="text-xs text-slate-500">Active screen-on time vs day one</p>
-          </div>
-          <span class="proof-pill" title="${runtime.proof}">Proof â„¹ï¸</span>
-        </div>
-        ${runtime.hasData ? renderRuntimeBar(runtime.originalRuntime, runtime.currentRuntime, runtime.percentLost) : '<div class="text-xs text-slate-400 py-6 text-center">Runtime estimate logs not available.</div>'}
-      </div>
-
-      <!-- Hero 3: Standby Vampire Drain -->
-      <div class="card">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="font-bold text-slate-800 text-base">Sleep Drain Auditor</h3>
-            <p class="text-xs text-slate-500">Modern standby power loss rate</p>
-          </div>
-          <span class="proof-pill" title="${standby.proof}">Proof â„¹ï¸</span>
-        </div>
-        <div class="my-2">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="badge ${standby.badgeClass}">${standby.severity}</span>
-            <span class="text-sm font-bold text-slate-800">${standby.avgDrainPerHour || 0}% / hour</span>
-          </div>
-          <p class="text-xs text-slate-600 leading-relaxed">
-            ${standby.severity === 'Severe Leak'
-              ? 'Warning: Your laptop consumes abnormal battery while sleeping with the lid closed. Typically caused by background wireless wakeups.'
-              : 'Standby drain is within expected operational limits.'}
-          </p>
-        </div>
-        <div class="pt-3 border-t border-slate-100 text-xs text-slate-500">
-          ${standby.worstIncidents && standby.worstIncidents.length > 0
-            ? `Worst Leak: Lost <strong>${standby.worstIncidents[0].dropPct}%</strong> in ${standby.worstIncidents[0].durationHours}h (${standby.worstIncidents[0].drainRatePerHour}%/hr)`
-            : 'No abnormal standby leaks detected in past 7 days.'}
-        </div>
-      </div>
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav no-print">
+      <button class="tab-btn active" onclick="switchTab('tab-overview')">ðŸ“Š Overview & Vitals</button>
+      <button class="tab-btn" onclick="switchTab('tab-degradation')">ðŸ“ˆ Degradation Trajectory</button>
+      <button class="tab-btn" onclick="switchTab('tab-standby')">ðŸ¦‡ Sleep Drain Auditor</button>
+      <button class="tab-btn" onclick="switchTab('tab-certificate')">ðŸ“œ Battery Certificate</button>
     </div>
 
-    <!-- Degradation Trajectory Section -->
-    <div class="card mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <h3 class="font-bold text-slate-800 text-base">Capacity Degradation Trajectory</h3>
-          <p class="text-xs text-slate-500">Chronological retention curve from initial recorded date to today</p>
-        </div>
-        <span class="proof-pill" title="${degradation.proof}">Proof â„¹ï¸</span>
-      </div>
-      ${renderDegradationChart(degradation.dataPoints, health.designCapacityMWh || 40000)}
-    </div>
-
-    <!-- 2 Column Section: Habits & Recommendations -->
-    <div class="grid-2">
-      <!-- Usage Habits & Power Profile -->
-      <div class="card">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="font-bold text-slate-800 text-base">Power Source & Habit Profile</h3>
-            <p class="text-xs text-slate-500">Plugged-in AC vs Battery operational split</p>
-          </div>
-          <span class="proof-pill" title="${habits.proof}">Proof â„¹ï¸</span>
-        </div>
-        <div class="space-y-4">
-          <div class="flex items-center justify-between text-sm">
-            <span class="font-medium text-slate-700">User Persona</span>
-            <span class="font-bold text-sky-700">${habits.persona}</span>
-          </div>
-          <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden flex">
-            <div class="bg-sky-500 h-4" style="width: ${habits.pluggedInRatioPct}%" title="Plugged In: ${habits.pluggedInRatioPct}%"></div>
-            <div class="bg-emerald-500 h-4" style="width: ${habits.batteryRatioPct}%" title="On Battery: ${habits.batteryRatioPct}%"></div>
-          </div>
-          <div class="flex justify-between text-xs text-slate-500">
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-sky-500 rounded-full inline-block"></span> AC Plugged: ${habits.pluggedInRatioPct}%</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block"></span> Battery Discharge: ${habits.batteryRatioPct}%</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Actionable Care Recommendations -->
-      <div class="card">
-        <h3 class="font-bold text-slate-800 text-base mb-1">Tailored Battery Care Guide</h3>
-        <p class="text-xs text-slate-500 mb-4">Manufacturer-neutral, actionable steps grounded in your report</p>
-        <div class="space-y-3">
-          ${recommendations.map(r => `
-            <div class="p-3 rounded-lg border text-xs ${
-              r.type === 'critical' ? 'bg-rose-50 border-rose-200 text-rose-900' :
-              r.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-900' :
-              r.type === 'tip' ? 'bg-sky-50 border-sky-200 text-sky-900' :
-              'bg-slate-50 border-slate-200 text-slate-800'
-            }">
-              <div class="font-bold mb-0.5">${r.title}</div>
-              <p class="mb-1.5 opacity-90">${r.desc}</p>
-              <div class="font-semibold text-slate-900">ðŸ‘‰ ${r.action}</div>
+    <!-- TAB 1: OVERVIEW -->
+    <div id="tab-overview" class="tab-content">
+      <!-- 3 Hero Cards -->
+      <div class="grid-3">
+        <!-- Hero 1: Battery Health -->
+        <div class="card">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Battery Health Score</h3>
+              <p class="text-xs text-slate-500">True chemical retention vs factory spec</p>
             </div>
-          `).join('')}
+            <span class="proof-pill" title="${health.proof}">Proof â„¹ï¸</span>
+          </div>
+          <div class="flex items-center gap-5 my-3">
+            ${renderCircularGauge(health.healthPercent, health.grade)}
+            <div class="space-y-1">
+              <p class="text-xs font-bold text-slate-800">${health.summary}</p>
+              <p class="text-xs text-slate-500">Lost Capacity: <span class="font-bold text-rose-600">${health.lostCapacityMWh.toLocaleString()} mWh</span> (-${health.lostPercent}%)</p>
+            </div>
+          </div>
+          <div class="pt-3 border-t flex justify-between text-xs text-slate-600">
+            <span>Design: <strong>${(health.designCapacityMWh || 0).toLocaleString()} mWh</strong></span>
+            <span>Current: <strong>${(health.fullChargeCapacityMWh || 0).toLocaleString()} mWh</strong></span>
+          </div>
+          <div class="mt-2 text-xs text-slate-400">
+            Hardware Cycles: ${health.cycleCount.isHardwareReported ? health.cycleCount.value : '<span title="OEM sensor omitted cycle counter in hardware">Not reported by OEM (-)</span>'}
+          </div>
+        </div>
+
+        <!-- Hero 2: Lost Runtime -->
+        <div class="card">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Lost Portable Runtime</h3>
+              <p class="text-xs text-slate-500">Active screen-on time vs factory baseline</p>
+            </div>
+            <span class="proof-pill" title="${runtime.proof}">Proof â„¹ï¸</span>
+          </div>
+          ${runtime.hasData ? renderRuntimeBar(runtime.originalRuntime, runtime.currentRuntime, runtime.percentLost) : '<div class="text-xs text-slate-400 py-6 text-center">Runtime estimate logs not available.</div>'}
+        </div>
+
+        <!-- Hero 3: Standby Vampire Drain -->
+        <div class="card">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Sleep Drain Auditor</h3>
+              <p class="text-xs text-slate-500">Modern standby power loss rate</p>
+            </div>
+            <span class="proof-pill" title="${standby.proof}">Proof â„¹ï¸</span>
+          </div>
+          <div class="my-2">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="badge ${standby.badgeClass}">${standby.severity}</span>
+              <span class="text-sm font-bold text-slate-800">${standby.avgDrainPerHour || 0}% / hour</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              ${standby.severity === 'Severe Leak'
+                ? 'Warning: Your laptop consumes abnormal battery while sleeping with the lid closed. Typically caused by background wireless wakeups in Modern Standby.'
+                : 'Standby drain is within expected operational limits.'}
+            </p>
+          </div>
+          <div class="pt-3 border-t text-xs text-slate-500">
+            ${standby.worstIncidents && standby.worstIncidents.length > 0
+              ? `Worst Incident: Lost <strong>${standby.worstIncidents[0].dropPct}%</strong> in ${standby.worstIncidents[0].durationHours}h (${standby.worstIncidents[0].drainRatePerHour}%/hr)`
+              : 'No abnormal standby leaks detected in past 7 days.'}
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-Column: Habits & Recommendations -->
+      <div class="grid-2">
+        <!-- Usage Habits & Power Profile -->
+        <div class="card">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Power Source & Habit Profile</h3>
+              <p class="text-xs text-slate-500">Plugged-in AC vs Battery operational split</p>
+            </div>
+            <span class="proof-pill" title="${habits.proof}">Proof â„¹ï¸</span>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between text-sm">
+              <span class="font-medium text-slate-700">Operational Persona</span>
+              <span class="font-bold text-sky-700">${habits.persona}</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden flex">
+              <div class="bg-sky-500 h-4" style="width: ${habits.pluggedInRatioPct}%" title="Plugged In: ${habits.pluggedInRatioPct}%"></div>
+              <div class="bg-emerald-500 h-4" style="width: ${habits.batteryRatioPct}%" title="On Battery: ${habits.batteryRatioPct}%"></div>
+            </div>
+            <div class="flex justify-between text-xs text-slate-500">
+              <span class="flex items-center gap-1.5"><span style="width:8px;height:8px;border-radius:50%;background:#0ea5e9;display:inline-block;"></span> AC Plugged: <strong>${habits.pluggedInRatioPct}%</strong></span>
+              <span class="flex items-center gap-1.5"><span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span> Battery Discharge: <strong>${habits.batteryRatioPct}%</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actionable Care Recommendations -->
+        <div class="card">
+          <h3 class="font-bold text-slate-900 text-base mb-1">Tailored Battery Care Guide</h3>
+          <p class="text-xs text-slate-500 mb-4">Manufacturer-neutral, actionable steps grounded in your report</p>
+          <div class="space-y-3">
+            ${recommendations.map(r => `
+              <div class="p-3 rounded-lg border text-xs ${
+                r.type === 'critical' ? 'bg-rose-50 border-rose-200 text-rose-900' :
+                r.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-900' :
+                r.type === 'tip' ? 'bg-sky-50 border-sky-200 text-sky-900' :
+                'bg-slate-50 border-slate-200 text-slate-800'
+              }">
+                <div class="font-bold mb-0.5">${r.title}</div>
+                <p class="mb-1.5 opacity-90">${r.desc}</p>
+                <div class="font-semibold text-slate-900">ðŸ‘‰ ${r.action}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: DEGRADATION TRAJECTORY -->
+    <div id="tab-degradation" class="tab-content" style="display:none;">
+      <div class="card mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Full Capacity Degradation Curve</h3>
+            <p class="text-xs text-slate-500">Plotted from earliest recorded date (${degradation.firstRecordedDate || 'Day 1'}) to today</p>
+          </div>
+          <span class="proof-pill" title="${degradation.proof}">Proof â„¹ï¸</span>
+        </div>
+        ${renderDegradationChart(degradation.dataPoints, health.designCapacityMWh || 40000)}
+      </div>
+
+      <div class="card">
+        <h3 class="font-bold text-slate-900 text-base mb-3">Chronological Capacity History Table</h3>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Recording Period</th>
+                <th>Full Charge Capacity</th>
+                <th>Design Capacity</th>
+                <th>Retention %</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(capacityHistory || []).slice().reverse().map(row => `
+                <tr>
+                  <td>${row.period}</td>
+                  <td><strong>${(row.fullChargeCapacityMWh || 0).toLocaleString()} mWh</strong></td>
+                  <td>${(row.designCapacityMWh || 0).toLocaleString()} mWh</td>
+                  <td><span class="badge ${row.healthPercent >= 80 ? 'badge-good' : row.healthPercent >= 65 ? 'badge-moderate' : 'badge-degraded'}">${row.healthPercent}%</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: STANDBY AUDITOR -->
+    <div id="tab-standby" class="tab-content" style="display:none;">
+      <div class="card mb-6">
+        <h3 class="font-bold text-slate-900 text-base mb-1">Modern Standby ("Vampire Drain") Diagnostics</h3>
+        <p class="text-xs text-slate-500 mb-4">Detection of background battery drain when the laptop lid is closed or system is sleeping</p>
+        
+        <div class="p-4 rounded-lg bg-sky-50 border border-sky-200 text-xs text-sky-900 mb-6">
+          <strong>Why does this happen?</strong> Windows 10/11 "Modern Standby" keeps network radios and background tasks running during sleep. If apps or drivers misbehave, the laptop stays warm inside a backpack and drains 20â€“50% of its battery.
+        </div>
+
+        <h4 class="font-bold text-slate-800 text-sm mb-3">Detected Sleep Drain Incidents</h4>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Sleep Start Time</th>
+                <th>Duration</th>
+                <th>Battery Lost</th>
+                <th>Hourly Drain Rate</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(standby.worstIncidents || []).length > 0 ? standby.worstIncidents.map(inc => `
+                <tr>
+                  <td>${inc.start}</td>
+                  <td>${inc.durationHours} hours</td>
+                  <td class="text-rose-600 font-bold">-${inc.dropPct}%</td>
+                  <td>${inc.drainRatePerHour}% / hr</td>
+                  <td><span class="badge ${inc.severity === 'Severe' ? 'badge-critical' : 'badge-moderate'}">${inc.severity} Leak</span></td>
+                </tr>
+              `).join('') : '<tr><td colspan="5" class="text-center py-4 text-slate-400">No abnormal standby leaks recorded in recent history.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: BATTERY CERTIFICATE -->
+    <div id="tab-certificate" class="tab-content" style="display:none;">
+      <div class="certificate-frame">
+        <div class="certificate-watermark">VERIFIED</div>
+        <div class="flex justify-between items-start border-b pb-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Official Battery Health Certificate</h2>
+            <p class="text-xs text-slate-500">Certified Diagnostic Report â€¢ Generated via VoltLens Open-Source Engine</p>
+          </div>
+          <div class="text-right">
+            <span class="badge badge-excellent text-sm py-1 px-3">Grade ${health.grade}</span>
+            <div class="text-xs text-slate-400 mt-1">Date: ${systemInfo.reportTime}</div>
+          </div>
+        </div>
+
+        <div class="grid-2 mb-6">
+          <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Hardware Specifications</h4>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between border-b py-1"><span>System Model:</span><strong>${systemInfo.systemProductName}</strong></div>
+              <div class="flex justify-between border-b py-1"><span>Battery Model:</span><strong>${battery.name || 'OEM Battery'}</strong></div>
+              <div class="flex justify-between border-b py-1"><span>Manufacturer:</span><strong>${battery.manufacturer || 'OEM'}</strong></div>
+              <div class="flex justify-between border-b py-1"><span>Chemistry:</span><strong>${battery.chemistry || 'LiP'}</strong></div>
+              <div class="flex justify-between border-b py-1"><span>Serial Number:</span><strong>${battery.serialNumber || 'N/A'}</strong></div>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Capacity & Degradation Metrics</h4>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between border-b py-1"><span>Factory Design Capacity:</span><strong>${(health.designCapacityMWh || 0).toLocaleString()} mWh</strong></div>
+              <div class="flex justify-between border-b py-1"><span>Current Full Charge Capacity:</span><strong>${(health.fullChargeCapacityMWh || 0).toLocaleString()} mWh</strong></div>
+              <div class="flex justify-between border-b py-1"><span>Permanent Capacity Loss:</span><strong class="text-rose-600">-${(health.lostCapacityMWh || 0).toLocaleString()} mWh (-${health.lostPercent}%)</strong></div>
+              <div class="flex justify-between border-b py-1"><span>Current Health Retention:</span><strong class="text-sky-700">${health.healthPercent}%</strong></div>
+              <div class="flex justify-between border-b py-1"><span>Hardware Cycle Count:</span><strong>${health.cycleCount.isHardwareReported ? health.cycleCount.value : 'Not Reported by OEM (-)'}</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-lg bg-slate-50 border text-xs text-slate-700 mb-6">
+          <strong>Diagnostic Verdict:</strong> ${health.summary} This device retains ${health.healthPercent}% of its factory electrical energy storage capacity.
+        </div>
+
+        <div class="flex justify-between items-end pt-4 border-t text-xs text-slate-400">
+          <div>
+            <span>Audited with 100% truth-grounding from Windows ACPI power subsystem registers.</span>
+          </div>
+          <button onclick="window.print()" class="btn btn-primary text-xs no-print">
+            ðŸ–¨ï¸ Print Certificate
+          </button>
         </div>
       </div>
     </div>
   `;
 }
 
+
+window.switchTab = function(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(tabId);
+  if (target) target.style.display = 'block';
+  const btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(btn => {
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
+      btn.classList.add('active');
+    }
+  });
+};
+
+window.decodeBase64Utf8 = function(b64) {
+  const binaryString = atob(b64.trim());
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return new TextDecoder('utf-8').decode(bytes);
+};
 
 window.loadReportHTML = function(htmlText) {
   try {
@@ -1257,9 +1689,14 @@ window.loadSampleReport = async function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  const embeddedScript = document.getElementById('embedded-report-data');
-  if (embeddedScript && embeddedScript.textContent && !embeddedScript.textContent.includes('/*INJECT_RAW_REPORT_HERE*/')) {
-    window.loadReportHTML(embeddedScript.textContent);
+  const b64Script = document.getElementById('embedded-report-base64');
+  if (b64Script && b64Script.textContent.trim().length > 100 && !b64Script.textContent.includes('PAYLOAD')) {
+    try {
+      const rawHtml = window.decodeBase64Utf8(b64Script.textContent);
+      window.loadReportHTML(rawHtml);
+    } catch (e) {
+      console.error('Failed to decode embedded report data', e);
+    }
   }
 });
 

@@ -1,5 +1,5 @@
 # VoltLens Standalone Bundle Generator
-# Merges modular src/*.js into a single zero-dependency standalone HTML template
+# Merges modular src/*.js and src/styles.css into a single zero-dependency standalone HTML template
 
 $ErrorActionPreference = "Stop"
 
@@ -9,12 +9,13 @@ $standaloneOutput = Join-Path $workspace "voltlens-standalone.html"
 
 Write-Host "[VoltLens] Building zero-dependency standalone template..."
 
+$cssContent = Get-Content (Join-Path $workspace "src\styles.css") -Raw
 $parserCode = Get-Content (Join-Path $workspace "src\parser.js") -Raw
 $analyticsCode = Get-Content (Join-Path $workspace "src\analytics.js") -Raw
 $chartsCode = Get-Content (Join-Path $workspace "src\charts.js") -Raw
 $uiCode = Get-Content (Join-Path $workspace "src\ui.js") -Raw
 
-# Remove export statements for pure inline script execution
+# Remove export and import statements for pure inline script execution
 $parserClean = $parserCode -replace 'export function', 'function'
 $analyticsClean = $analyticsCode -replace 'export function', 'function'
 $chartsClean = $chartsCode -replace 'export function', 'function'
@@ -36,11 +37,37 @@ $uiClean
 
 $htmlContent = Get-Content $templateFile -Raw
 
+# Replace embedded style with src/styles.css
+$styleRegex = '<style>[\s\S]*?</style>'
+$htmlContent = $htmlContent -replace $styleRegex, "<style>`n$cssContent`n</style>"
+
 # Replace the module script block with inline script
 $moduleRegex = '<script type="module">[\s\S]*?</script>'
 $inlineScriptBlock = @"
 <script>
 $combinedJs
+
+window.switchTab = function(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(tabId);
+  if (target) target.style.display = 'block';
+  const btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(btn => {
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
+      btn.classList.add('active');
+    }
+  });
+};
+
+window.decodeBase64Utf8 = function(b64) {
+  const binaryString = atob(b64.trim());
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return new TextDecoder('utf-8').decode(bytes);
+};
 
 window.loadReportHTML = function(htmlText) {
   try {
@@ -72,9 +99,14 @@ window.loadSampleReport = async function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  const embeddedScript = document.getElementById('embedded-report-data');
-  if (embeddedScript && embeddedScript.textContent && !embeddedScript.textContent.includes('/*INJECT_RAW_REPORT_HERE*/')) {
-    window.loadReportHTML(embeddedScript.textContent);
+  const b64Script = document.getElementById('embedded-report-base64');
+  if (b64Script && b64Script.textContent.trim().length > 100 && !b64Script.textContent.includes('PAYLOAD')) {
+    try {
+      const rawHtml = window.decodeBase64Utf8(b64Script.textContent);
+      window.loadReportHTML(rawHtml);
+    } catch (e) {
+      console.error('Failed to decode embedded report data', e);
+    }
   }
 });
 

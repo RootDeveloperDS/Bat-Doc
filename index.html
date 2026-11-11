@@ -157,13 +157,35 @@
     <main id="dashboard-view" style="display:none;"></main>
   </div>
 
-  <!-- Raw Report Injected Placeholder for 1-Click Batch Execution -->
-  <script id="embedded-report-data" type="text/plain">/*INJECT_RAW_REPORT_HERE*/</script>
+  <!-- Raw Report Injected Placeholder for 1-Click Batch Execution (Base64 Encoded) -->
+  <script id="embedded-report-base64" type="text/plain">__RAW_REPORT_BASE64_PAYLOAD__</script>
 
   <script type="module">
     import { parseBatteryReport } from './src/parser.js';
     import { analyzeBatteryReport } from './src/analytics.js';
     import { renderDashboard } from './src/ui.js';
+
+    window.switchTab = function(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById(tabId);
+      if (target) target.style.display = 'block';
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
+          btn.classList.add('active');
+        }
+      });
+    };
+
+    window.decodeBase64Utf8 = function(b64) {
+      const binaryString = atob(b64.trim());
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return new TextDecoder('utf-8').decode(bytes);
+    };
 
     window.loadReportHTML = function(htmlText) {
       try {
@@ -194,11 +216,16 @@
       }
     };
 
-    // Auto-load if raw data was injected by batch script
+    // Auto-load if raw data was injected as Base64 by batch script
     document.addEventListener('DOMContentLoaded', () => {
-      const embeddedScript = document.getElementById('embedded-report-data');
-      if (embeddedScript && embeddedScript.textContent && !embeddedScript.textContent.includes('/*INJECT_RAW_REPORT_HERE*/')) {
-        window.loadReportHTML(embeddedScript.textContent);
+      const b64Script = document.getElementById('embedded-report-base64');
+      if (b64Script && b64Script.textContent.trim().length > 100 && !b64Script.textContent.includes('PAYLOAD')) {
+        try {
+          const rawHtml = window.decodeBase64Utf8(b64Script.textContent);
+          window.loadReportHTML(rawHtml);
+        } catch (e) {
+          console.error('Failed to decode embedded report data', e);
+        }
       }
     });
 
