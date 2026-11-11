@@ -34,7 +34,7 @@ if not exist "%TEMPLATE%" (
         echo [INFO] Standalone template not found locally. Fetching latest template...
         powershell -NoProfile -Command ^
             "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;" ^
-            "$url = 'https://raw.githubusercontent.com/akhildev-x/battery-report-analysis/master/batdoc-standalone.html';" ^
+            "$url = 'https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc-standalone.html';" ^
             "try { (New-Object System.Net.WebClient).DownloadFile($url, '%TEMP%\batdoc-standalone.html') } catch { exit 1 }"
         if errorlevel 1 (
             echo [ERROR] Could not find or download batdoc-standalone.html.

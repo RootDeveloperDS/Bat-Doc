@@ -6,20 +6,21 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)](https://microsoft.com/windows)
 [![Privacy: 100% Offline](https://img.shields.io/badge/Privacy-100%25%20Offline%20%26%20Local-success.svg)](#-privacy--security-guarantee)
+[![PWA: Installable](https://img.shields.io/badge/PWA-Installable%20Desktop%20App-0284c7.svg)](#option-3-installable-desktop-app-pwa)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20Install-brightgreen.svg)](#-how-any-user-in-the-world-uses-batdoc-instantly)
 
 ---
 
 ## ⚡ How Any User in the World Uses BATDOC Instantly
 
-BATDOC requires **zero developer tools, zero Python, zero Node.js, and zero setup**. Choose the method that fits you best:
+BATDOC requires **zero developer tools, zero Python, zero Node.js, and zero setup**. Choose whichever method fits your workflow:
 
 ### Option 1: Instant 1-Line Command (Fastest — 3 Seconds, No Manual Download)
 Open Windows PowerShell (press <kbd>Win</kbd> + <kbd>R</kbd>, type `powershell`, and press <kbd>Enter</kbd>), then paste:
 ```powershell
-irm https://raw.githubusercontent.com/akhildev-x/battery-report-analysis/master/batdoc.ps1 | iex
+irm https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc.ps1 | iex
 ```
-*✨ What happens:* Windows extracts your battery registers, compiles your executive report to your **Desktop (`BatDoc-Report.html`)**, and automatically opens it in your default browser.
+*✨ What happens:* Windows extracts your battery registers, compiles your executive report directly onto your **Desktop (`BatDoc-Report.html`)**, and automatically opens it in your default browser.
 
 ---
 
@@ -30,11 +31,11 @@ irm https://raw.githubusercontent.com/akhildev-x/battery-report-analysis/master/
 
 ---
 
-### Option 3: Zero-Download Web App (Drag & Drop in Any Browser)
-If you already generated a `battery-report.html`:
-1. Open [`index.html`](index.html) or visit the hosted web mirror.
-2. Drag and drop your `battery-report.html` into the window.
-3. Your executive dashboard renders instantly. **100% client-side: no data ever leaves your laptop.**
+### Option 3: Installable Desktop App (PWA) / Web Mirror
+1. Open the hosted web mirror: **[rootdeveloperds.github.io/Bat-Doc](https://rootdeveloperds.github.io/Bat-Doc/)** in Chrome or Edge.
+2. Click **"Install App"** in the top navigation bar or address bar.
+3. BATDOC installs directly to your **Windows Start Menu & Desktop** with its own standalone window and icon.
+4. Drag & drop your `battery-report.html` anytime. **100% client-side: works fully offline even in Airplane Mode.**
 
 ---
 
@@ -99,11 +100,15 @@ For everyday users, students, office workers, and non-developers:
 BATDOC follows clean, modular software engineering principles:
 
 ```text
-battery-report-analysis/
+Bat-Doc/
 ├── batdoc.bat                  # 1-Click Windows Batch launcher
 ├── batdoc.ps1                  # 1-Line PowerShell instant launcher
 ├── index.html                  # Standalone Web App / Drag-and-Drop Dropzone
 ├── batdoc-standalone.html      # Inlined zero-dependency offline distribution
+├── manifest.json               # PWA Desktop App manifest
+├── sw.js                       # PWA Offline Service Worker (Cache-first)
+├── assets/                     # Application branding & icons
+│   └── icon.svg                # Vector SVG brand logo
 ├── src/                        # Modular source code
 │   ├── parser.js               # Strict 1:1 parser for Windows powercfg tables
 │   ├── analytics.js            # Grounded math engine (Health %, Standby, Habits)
@@ -113,7 +118,8 @@ battery-report-analysis/
 │   ├── ui.js                   # Executive dashboard rendering engine
 │   └── styles.css              # Executive light design system
 ├── tools/
-│   ├── build-standalone.ps1    # Bundler compiling src/ into standalone HTML
+│   ├── build-standalone.js     # Robust Node bundler compiling standalone HTML
+│   ├── build-standalone.ps1    # PowerShell wrapper for bundler
 │   └── test-bundle.js          # Automated syntax and compilation validator
 ├── sample/
 │   └── battery-report.html     # Real-world anonymized sample report for testing
@@ -130,15 +136,23 @@ If you want to contribute or modify the source modules:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/akhildev-x/battery-report-analysis.git
-   cd battery-report-analysis
+   git clone https://github.com/RootDeveloperDS/Bat-Doc.git
+   cd Bat-Doc
    ```
 2. Modify files inside `src/`.
 3. Validate and recompile the standalone zero-dependency distribution:
    ```powershell
    node .\tools\test-bundle.js
-   powershell -ExecutionPolicy Bypass -File .\tools\build-standalone.ps1
+   node .\tools\build-standalone.js
    ```
+
+---
+
+## 🗺️ Future Roadmap
+
+- [ ] **Native Portable Executable (`batdoc.exe`):** Single compiled zero-dependency Windows executable with custom icon and silent execution.
+- [ ] **Official Microsoft Package Manager (`winget`):** Support for `winget install BatDoc`.
+- [ ] **Windows Explorer Context Menu:** Optional 1-click shortcut in Windows Explorer (*"Right Click Desktop → ⚡ Diagnose Battery with BATDOC"*).
 
 ---
 

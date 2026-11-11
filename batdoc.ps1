@@ -25,7 +25,7 @@ if (-not (Test-Path $templatePath)) {
     $templatePath = Join-Path $env:TEMP "batdoc-standalone.html"
     if (-not (Test-Path $templatePath)) {
         Write-Host "[INFO] Fetching standalone diagnostic template..." -ForegroundColor Gray
-        $uri = "https://raw.githubusercontent.com/akhildev-x/battery-report-analysis/master/batdoc-standalone.html"
+        $uri = "https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc-standalone.html"
         Invoke-WebRequest -Uri $uri -OutFile $templatePath -UseBasicParsing
     }
 }
@@ -35,8 +35,19 @@ $b64 = [Convert]::ToBase64String($rawBytes)
 $templateContent = Get-Content -LiteralPath $templatePath -Raw -Encoding UTF8
 $final = $templateContent.Replace('__RAW_REPORT_BASE64_PAYLOAD__', $b64)
 
-$desktopOutput = Join-Path ([Environment]::GetFolderPath("Desktop")) "BatDoc-Report.html"
+$realDesktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
+if (-not $realDesktop) {
+    $realDesktop = Join-Path $env:USERPROFILE "Desktop"
+}
+
+$desktopOutput = Join-Path $realDesktop "BatDoc-Report.html"
 [System.IO.File]::WriteAllText($desktopOutput, $final, [System.Text.Encoding]::UTF8)
+
+# If profile desktop is distinct from OneDrive desktop, mirror the output
+$altDesktop = Join-Path $env:USERPROFILE "Desktop"
+if ((Test-Path $altDesktop) -and ($realDesktop -ne $altDesktop)) {
+    Copy-Item -Path $desktopOutput -Destination (Join-Path $altDesktop "BatDoc-Report.html") -Force -ErrorAction SilentlyContinue
+}
 
 Remove-Item -Path $tempRaw -Force -ErrorAction SilentlyContinue
 
