@@ -6,23 +6,35 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)](https://microsoft.com/windows)
 [![Privacy: 100% Offline](https://img.shields.io/badge/Privacy-100%25%20Offline%20%26%20Local-success.svg)](#-privacy--security-guarantee)
-[![PWA: Installable](https://img.shields.io/badge/PWA-Installable%20Desktop%20App-0284c7.svg)](#option-4-installable-desktop-app-pwa)
+[![PWA: Installable](https://img.shields.io/badge/PWA-Installable%20Desktop%20App-0284c7.svg)](#option-5-installable-desktop-app-pwa)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20Install-brightgreen.svg)](#-how-any-user-in-the-world-uses-batdoc-instantly)
 
 ---
 
 ## ⚡ How Any User in the World Uses BATDOC Instantly
 
-BATDOC requires **zero developer tools, zero Python, zero Node.js, and zero setup**. Choose whichever method fits your workflow:
+BATDOC requires **zero developer tools, zero Python, zero Node.js, and zero complex setup**. Choose whichever free method fits your needs:
 
 ### Option 1: Native Desktop Executable (1-Click, Silent Execution)
-1. Download **[`batdoc.exe`](https://github.com/RootDeveloperDS/Bat-Doc/releases)** from the latest release.
+*Best for everyday laptop users who want a smooth, native app experience.*
+1. Download **[`batdoc.exe`](https://github.com/RootDeveloperDS/Bat-Doc/releases)** directly from the latest release.
 2. **Double-click `batdoc.exe`**.
-3. **Done!** Runs completely silently (zero black terminal windows), generates `BatDoc-Report.html` on your Desktop, and opens your browser immediately.
+3. **Done!** Runs 100% silently (zero black terminal windows), extracts your hardware telemetry, saves `BatDoc-Report.html` to your **Desktop**, and launches your default browser immediately.
 
 ---
 
-### Option 2: Instant 1-Line Command (Fastest — 3 Seconds, No Manual Download)
+### Option 2: Microsoft Windows Package Manager (`winget`)
+*Best for power users, developers, and IT administrators.*
+Open Command Prompt or PowerShell and run:
+```cmd
+winget install RootDeveloperDS.BatDoc
+```
+Once installed, simply type `batdoc` anywhere in Terminal or the Windows Run dialog (<kbd>Win</kbd> + <kbd>R</kbd> $\rightarrow$ `batdoc`) to inspect your battery anytime.
+
+---
+
+### Option 3: Instant 1-Line Command (Fastest — 3 Seconds, No Manual Download)
+*Best for quick checks without downloading or unzipping files.*
 Open Windows PowerShell (press <kbd>Win</kbd> + <kbd>R</kbd>, type `powershell`, and press <kbd>Enter</kbd>), then paste:
 ```powershell
 irm https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc.ps1 | iex
@@ -31,14 +43,16 @@ irm https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc.ps1 
 
 ---
 
-### Option 3: 1-Click Double-Click Script (`batdoc.bat`)
+### Option 4: 1-Click Double-Click Script (`batdoc.bat`)
+*Best for saving on a USB drive or running on air-gapped systems.*
 1. Download **[`batdoc.bat`](batdoc.bat)** directly to your computer.
 2. **Double-click `batdoc.bat`**.
 3. Your diagnostic report pops up on your screen immediately and is saved to your Desktop.
 
 ---
 
-### Option 4: Installable Desktop App (PWA) / Web Mirror
+### Option 5: Installable Desktop App (PWA) / Web Mirror
+*Best for casual users or inspecting reports generated on another laptop.*
 1. Open the hosted web mirror: **[rootdeveloperds.github.io/Bat-Doc](https://rootdeveloperds.github.io/Bat-Doc/)** in Chrome or Edge.
 2. Click **"Install App"** in the top navigation bar or address bar.
 3. BATDOC installs directly to your **Windows Start Menu & Desktop** with its own standalone window and icon.
@@ -127,8 +141,14 @@ Bat-Doc/
 │   ├── icons.js                # Executive vector SVG icon library (Zero emojis)
 │   ├── ui.js                   # Executive dashboard rendering engine
 │   └── styles.css              # Executive light design system
+├── winget/                     # Microsoft Windows Package Manager manifests
+│   └── manifests/r/RootDeveloperDS/BatDoc/1.3.0/
+│       ├── RootDeveloperDS.BatDoc.version.yaml
+│       ├── RootDeveloperDS.BatDoc.installer.yaml
+│       └── RootDeveloperDS.BatDoc.locale.en-US.yaml
 ├── tools/
 │   ├── build-exe.ps1           # Native C# compiler script (using csc.exe)
+│   ├── test-winget.ps1         # Microsoft winget manifest validation test
 │   ├── build-standalone.js     # Robust Node bundler compiling standalone HTML
 │   ├── build-standalone.ps1    # PowerShell wrapper for bundler
 │   └── test-bundle.js          # Automated syntax and compilation validator
@@ -156,6 +176,7 @@ If you want to contribute or modify the source modules:
    node .\tools\test-bundle.js
    node .\tools\build-standalone.js
    powershell -ExecutionPolicy Bypass -File .\tools\build-exe.ps1
+   powershell -ExecutionPolicy Bypass -File .\tools\test-winget.ps1
    ```
 
 ---
@@ -163,7 +184,7 @@ If you want to contribute or modify the source modules:
 ## 🗺️ Future Roadmap
 
 - [x] **Native Portable Executable (`batdoc.exe`):** Single compiled zero-dependency Windows executable with custom icon and silent execution.
-- [ ] **Official Microsoft Package Manager (`winget`):** Support for `winget install BatDoc`.
+- [x] **Microsoft Windows Package Manager (`winget`):** Manifest schema `1.6.0` tested and verified via `winget validate`.
 - [ ] **Windows Explorer Context Menu:** Optional 1-click shortcut in Windows Explorer (*"Right Click Desktop → ⚡ Diagnose Battery with BATDOC"*).
 
 ---
