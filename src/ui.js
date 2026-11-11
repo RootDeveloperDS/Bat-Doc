@@ -1,5 +1,5 @@
 /**
- * VoltLens God-Level UI Engine
+ * BATDOC God-Level UI Engine
  * Modular tabbed navigation, rich data views, and exportable Battery Certificate.
  * 100% Vector SVG Icons (No emoji corruption). Human-friendly dates and durations.
  */
@@ -268,7 +268,7 @@ export function renderDashboard(data, analysis) {
         <div class="flex justify-between items-start border-b pb-4 mb-6">
           <div>
             <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Official Battery Health Certificate</h2>
-            <p class="text-xs text-slate-500">Certified Diagnostic Report • Generated via Battery Intelligence Engine</p>
+            <p class="text-xs text-slate-500">Certified Diagnostic Report • Generated via BATDOC Engine</p>
           </div>
           <div class="text-right">
             <span class="badge badge-excellent text-sm py-1 px-3">Grade ${health.grade}</span>

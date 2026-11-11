@@ -4,15 +4,14 @@
  * Human-friendly labels and crisp typography.
  */
 
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
 function parseShortDate(str) {
   if (!str) return '';
   const match = str.match(/(\d{4})-(\d{2})/);
   if (!match) return str;
   const year = match[1];
   const monthIdx = parseInt(match[2], 10) - 1;
-  return `${MONTHS_SHORT[monthIdx] || match[2]} ${year}`;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[monthIdx] || match[2]} ${year}`;
 }
 
 export function renderCircularGauge(percent, grade) {

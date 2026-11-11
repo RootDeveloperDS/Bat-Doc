@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VoltLens — Battery Intelligence Diagnostic</title>
+  <title>BATDOC — Battery Intelligence Diagnostic</title>
   <style>
 /* VoltLens God-Level Light Design System */
 :root {
@@ -412,8 +412,8 @@ body {
           </defs>
         </svg>
         <div>
-          <h1 class="brand-title">Battery Intelligence Diagnostic</h1>
-          <p class="brand-tagline">100% Grounded Hardware Health & Degradation Analytics</p>
+          <h1 class="brand-title">BATDOC</h1>
+          <p class="brand-tagline">100% Grounded Windows Battery Intelligence Diagnostic</p>
         </div>
       </div>
       <div class="flex items-center gap-3 no-print">
@@ -1000,15 +1000,14 @@ function parseLifeEstimates(doc) {
  * Human-friendly labels and crisp typography.
  */
 
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
 function parseShortDate(str) {
   if (!str) return '';
   const match = str.match(/(\d{4})-(\d{2})/);
   if (!match) return str;
   const year = match[1];
   const monthIdx = parseInt(match[2], 10) - 1;
-  return `${MONTHS_SHORT[monthIdx] || match[2]} ${year}`;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[monthIdx] || match[2]} ${year}`;
 }
 
 function renderCircularGauge(percent, grade) {
@@ -1547,7 +1546,7 @@ function generateRecommendations(health, standby, habits, battery) {
 
 // --- UI ---
 /**
- * VoltLens God-Level UI Engine
+ * BATDOC God-Level UI Engine
  * Modular tabbed navigation, rich data views, and exportable Battery Certificate.
  * 100% Vector SVG Icons (No emoji corruption). Human-friendly dates and durations.
  */
@@ -1816,7 +1815,7 @@ function renderDashboard(data, analysis) {
         <div class="flex justify-between items-start border-b pb-4 mb-6">
           <div>
             <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Official Battery Health Certificate</h2>
-            <p class="text-xs text-slate-500">Certified Diagnostic Report • Generated via Battery Intelligence Engine</p>
+            <p class="text-xs text-slate-500">Certified Diagnostic Report • Generated via BATDOC Engine</p>
           </div>
           <div class="text-right">
             <span class="badge badge-excellent text-sm py-1 px-3">Grade ${health.grade}</span>

@@ -1,17 +1,17 @@
 @echo off
 setlocal enabledelayedexpansion
-title VoltLens - Battery Intelligence Diagnostic
+title BATDOC - Battery Intelligence Diagnostic
 color 0B
 
 echo ==============================================================
-echo                 VoltLens - Battery Diagnostic                 
+echo                 BATDOC - Battery Diagnostic                 
 echo         100%% Grounded Windows Battery Intelligence           
 echo ==============================================================
 echo.
 echo [1/3] Interrogating laptop battery hardware via Windows powercfg...
 
 :: 1. Generate native Windows report in temporary directory
-set "RAW_FILE=%TEMP%\voltlens_raw.html"
+set "RAW_FILE=%TEMP%\batdoc_raw.html"
 powercfg /batteryreport /output "%RAW_FILE%" >nul 2>&1
 
 if not exist "%RAW_FILE%" (
@@ -24,12 +24,12 @@ if not exist "%RAW_FILE%" (
 echo [2/3] Processing 100%% truth-grounded diagnostic insights...
 
 :: Determine template path
-set "TEMPLATE=%~dp0voltlens-standalone.html"
+set "TEMPLATE=%~dp0batdoc-standalone.html"
 if not exist "%TEMPLATE%" (
     set "TEMPLATE=%~dp0index.html"
 )
 
-set "OUTPUT_FILE=%USERPROFILE%\Desktop\VoltLens-Battery-Report.html"
+set "OUTPUT_FILE=%USERPROFILE%\Desktop\BatDoc-Report.html"
 
 :: 2. Inject raw report as clean Base64 to prevent HTML corruption
 powershell -NoProfile -Command ^
