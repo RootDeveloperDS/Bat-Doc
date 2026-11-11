@@ -1,5 +1,5 @@
-# VoltLens Standalone Bundle Generator
-# Merges modular src/*.js and src/styles.css into a single zero-dependency standalone HTML template
+# Standalone Bundle Generator
+# Merges modular src/*.js, formatters, icons, and styles into a single zero-dependency standalone HTML template
 
 $ErrorActionPreference = "Stop"
 
@@ -7,21 +7,31 @@ $workspace = Split-Path -Parent $PSScriptRoot
 $templateFile = Join-Path $workspace "index.html"
 $standaloneOutput = Join-Path $workspace "voltlens-standalone.html"
 
-Write-Host "[VoltLens] Building zero-dependency standalone template..."
+Write-Host "[VoltLens] Building zero-dependency standalone template with UTF-8 encoding..."
 
-$cssContent = Get-Content (Join-Path $workspace "src\styles.css") -Raw
-$parserCode = Get-Content (Join-Path $workspace "src\parser.js") -Raw
-$analyticsCode = Get-Content (Join-Path $workspace "src\analytics.js") -Raw
-$chartsCode = Get-Content (Join-Path $workspace "src\charts.js") -Raw
-$uiCode = Get-Content (Join-Path $workspace "src\ui.js") -Raw
+$cssContent = Get-Content (Join-Path $workspace "src\styles.css") -Raw -Encoding UTF8
+$formattersCode = Get-Content (Join-Path $workspace "src\formatters.js") -Raw -Encoding UTF8
+$iconsCode = Get-Content (Join-Path $workspace "src\icons.js") -Raw -Encoding UTF8
+$parserCode = Get-Content (Join-Path $workspace "src\parser.js") -Raw -Encoding UTF8
+$analyticsCode = Get-Content (Join-Path $workspace "src\analytics.js") -Raw -Encoding UTF8
+$chartsCode = Get-Content (Join-Path $workspace "src\charts.js") -Raw -Encoding UTF8
+$uiCode = Get-Content (Join-Path $workspace "src\ui.js") -Raw -Encoding UTF8
 
 # Remove export and import statements for pure inline script execution
+$formattersClean = $formattersCode -replace 'export function', 'function'
+$iconsClean = $iconsCode -replace 'export const', 'const'
 $parserClean = $parserCode -replace 'export function', 'function'
 $analyticsClean = $analyticsCode -replace 'export function', 'function'
 $chartsClean = $chartsCode -replace 'export function', 'function'
-$uiClean = $uiCode -replace 'export function', 'function' -replace 'import \{.*?\} from \x27\./charts\.js\x27;', ''
+$uiClean = $uiCode -replace 'export function', 'function' -replace 'import \{.*?\} from \x27.*?\x27;', ''
 
 $combinedJs = @"
+// --- FORMATTERS ---
+$formattersClean
+
+// --- ICONS ---
+$iconsClean
+
 // --- PARSER ---
 $parserClean
 
@@ -35,7 +45,7 @@ $analyticsClean
 $uiClean
 "@
 
-$htmlContent = Get-Content $templateFile -Raw
+$htmlContent = Get-Content $templateFile -Raw -Encoding UTF8
 
 # Replace embedded style with src/styles.css
 $styleRegex = '<style>[\s\S]*?</style>'
@@ -140,6 +150,6 @@ document.getElementById('btn-demo').addEventListener('click', window.loadSampleR
 "@
 
 $finalStandalone = $htmlContent -replace $moduleRegex, $inlineScriptBlock
-Set-Content -Path $standaloneOutput -Value $finalStandalone -Encoding UTF8
+[System.IO.File]::WriteAllText($standaloneOutput, $finalStandalone, [System.Text.Encoding]::UTF8)
 
 Write-Host "[VoltLens] Standalone bundle successfully built: $standaloneOutput"

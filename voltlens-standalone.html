@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VoltLens â€” Battery Intelligence Diagnostic</title>
+  <title>VoltLens — Battery Intelligence Diagnostic</title>
   <style>
 /* VoltLens God-Level Light Design System */
 :root {
@@ -399,16 +399,27 @@ body {
     <!-- Header -->
     <header class="app-header">
       <div class="brand">
-        <div class="brand-icon">âš¡</div>
+        <svg width="38" height="38" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="10" fill="url(#brand_grad)" />
+          <rect x="10" y="14" width="18" height="12" rx="2.5" stroke="#ffffff" stroke-width="2" />
+          <path d="M30 18V22" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+          <path d="M20 10L14 21H20L18 30L26 18H20L22 10Z" fill="#ffffff" />
+          <defs>
+            <linearGradient id="brand_grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#0284c7" />
+              <stop offset="1" stop-color="#0369a1" />
+            </linearGradient>
+          </defs>
+        </svg>
         <div>
-          <h1 class="brand-title">VoltLens</h1>
-          <p class="brand-tagline">100% Grounded Windows Battery Intelligence Diagnostic</p>
+          <h1 class="brand-title">Battery Intelligence Diagnostic</h1>
+          <p class="brand-tagline">100% Grounded Hardware Health & Degradation Analytics</p>
         </div>
       </div>
       <div class="flex items-center gap-3 no-print">
         <button id="btn-demo" class="btn btn-secondary text-xs">Load Demo Data</button>
         <label for="file-input" class="btn btn-primary text-xs cursor-pointer">
-          ðŸ“ Select battery-report.html
+          Select battery-report.html
           <input type="file" id="file-input" accept=".html,.htm" style="display:none;">
         </label>
       </div>
@@ -416,15 +427,20 @@ body {
 
     <!-- Dropzone View (Visible when no data loaded) -->
     <div id="dropzone-view" class="dropzone no-print">
-      <div class="text-4xl mb-3">ðŸ”‹</div>
-      <h2 class="text-lg font-bold text-slate-800 mb-1">Drag and drop your battery-report.html here</h2>
+      <div style="display:flex; justify-content:center; margin-bottom:1rem;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </div>
+      <h2 class="text-lg font-bold text-slate-900 mb-1">Drag and drop your battery-report.html here</h2>
       <p class="text-sm text-slate-500 mb-4">100% Client-Side & Private. Zero data leaves your computer.</p>
       <div class="inline-flex gap-2">
         <button onclick="document.getElementById('file-input').click()" class="btn btn-primary text-xs">Browse Local File</button>
-        <button onclick="loadSampleReport()" class="btn btn-secondary text-xs">See Example Report</button>
+        <button onclick="loadSampleReport()" class="btn btn-secondary text-xs">Explore Demo</button>
       </div>
       <div class="mt-6 text-xs text-slate-400 max-w-md mx-auto">
-        Don't have the file? Run <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">powercfg /batteryreport</code> in CMD, or double-click <strong>voltlens.bat</strong>.
+        Don't have the file? Run <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">powercfg /batteryreport</code> in CMD, or double-click the launcher script.
       </div>
     </div>
 
@@ -436,6 +452,185 @@ body {
   <script id="embedded-report-base64" type="text/plain">__RAW_REPORT_BASE64_PAYLOAD__</script>
 
   <script>
+// --- FORMATTERS ---
+/**
+ * VoltLens Humanized Formatting Utilities
+ * Converts raw machine timestamps and hex-like durations into conversational human language.
+ */
+
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_FULL = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+function formatHumanDate(rawDateStr) {
+  if (!rawDateStr || rawDateStr === '-') return 'N/A';
+  const clean = rawDateStr.trim();
+
+  // Range format: "2024-01-22 - 2024-02-05"
+  if (clean.includes(' - ')) {
+    const parts = clean.split(' - ');
+    return `${formatSingleDate(parts[0], false)} – ${formatSingleDate(parts[1], true)}`;
+  }
+
+  // Single date with or without time: "2026-11-11 11:45:14" or "2026-11-11"
+  return formatSingleDate(clean, true);
+}
+
+function formatSingleDate(str, includeYear) {
+  if (!str) return '';
+  const match = str.match(/(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+  if (!match) return str;
+
+  const year = match[1];
+  const monthIdx = parseInt(match[2], 10) - 1;
+  const day = parseInt(match[3], 10);
+  const monthName = MONTHS_SHORT[monthIdx] || match[2];
+
+  let result = `${monthName} ${day}`;
+  if (includeYear) result += `, ${year}`;
+
+  if (match[4] && match[5]) {
+    let hours = parseInt(match[4], 10);
+    const mins = match[5];
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    result += ` at ${hours}:${mins} ${ampm}`;
+  }
+
+  return result;
+}
+
+function formatHumanDuration(hmsOrHours) {
+  if (!hmsOrHours || hmsOrHours === '-') return 'N/A';
+
+  // If already a number (decimal hours like 3.5)
+  if (typeof hmsOrHours === 'number') {
+    const totalMinutes = Math.round(hmsOrHours * 60);
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    if (hrs === 0) return `${mins} mins`;
+    if (mins === 0) return `${hrs} hr${hrs > 1 ? 's' : ''}`;
+    return `${hrs} hr${hrs > 1 ? 's' : ''} ${mins} mins`;
+  }
+
+  // If "H:MM:SS" or "HH:MM:SS"
+  const parts = hmsOrHours.split(':').map(p => parseInt(p, 10));
+  if (parts.length === 3 && !parts.some(isNaN)) {
+    const hrs = parts[0];
+    const mins = parts[1];
+    if (hrs === 0) return `${mins} mins`;
+    if (mins === 0) return `${hrs} hr${hrs > 1 ? 's' : ''}`;
+    return `${hrs} hr${hrs > 1 ? 's' : ''} ${mins} min${mins > 1 ? 's' : ''}`;
+  }
+
+  return hmsOrHours;
+}
+
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return '';
+  const match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return '';
+
+  const past = new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
+  const now = new Date();
+  const diffDays = Math.round((now - past) / (1000 * 3600 * 24));
+
+  if (diffDays <= 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 30) return `${diffDays} days ago`;
+  const diffMonths = Math.round(diffDays / 30.4);
+  if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+  const diffYears = (diffDays / 365.25).toFixed(1);
+  return `${diffYears} years ago`;
+}
+
+
+// --- ICONS ---
+/**
+ * VoltLens Vector SVG Icon System
+ * 100% immune to character encoding/mojibake issues. Crisp, modern, executive.
+ */
+
+const ICONS = {
+  LOGO: `
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="40" height="40" rx="10" fill="url(#logo_grad)" />
+      <!-- Battery Body -->
+      <rect x="10" y="14" width="18" height="12" rx="2.5" stroke="#ffffff" stroke-width="2" />
+      <path d="M30 18V22" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+      <!-- High-Voltage Energy Bolt -->
+      <path d="M20 10L14 21H20L18 30L26 18H20L22 10Z" fill="#ffffff" />
+      <defs>
+        <linearGradient id="logo_grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#0284c7" />
+          <stop offset="1" stop-color="#0369a1" />
+        </linearGradient>
+      </defs>
+    </svg>
+  `,
+
+  DASHBOARD: `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" />
+      <rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" />
+    </svg>
+  `,
+
+  TRAJECTORY: `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  `,
+
+  STANDBY: `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  `,
+
+  CERTIFICATE: `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 15l-2 5l9-5l-9-5l2 5z" /><circle cx="12" cy="8" r="6" />
+    </svg>
+  `,
+
+  PRINT: `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+      <rect x="6" y="14" width="12" height="8" />
+    </svg>
+  `,
+
+  INFO: `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+  `,
+
+  CHECK: `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  `,
+
+  ALERT: `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  `,
+
+  UPLOAD: `
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  `
+};
+
+
 // --- PARSER ---
 /**
  * VoltLens Battery Report Parser
@@ -802,25 +997,37 @@ function parseLifeEstimates(doc) {
 /**
  * VoltLens Native SVG Vector Charting Engine
  * 100% Offline: Zero external dependencies, pure mathematical SVG rendering.
+ * Human-friendly labels and crisp typography.
  */
 
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function parseShortDate(str) {
+  if (!str) return '';
+  const match = str.match(/(\d{4})-(\d{2})/);
+  if (!match) return str;
+  const year = match[1];
+  const monthIdx = parseInt(match[2], 10) - 1;
+  return `${MONTHS_SHORT[monthIdx] || match[2]} ${year}`;
+}
+
 function renderCircularGauge(percent, grade) {
-  const radius = 54;
-  const stroke = 10;
+  const radius = 56;
+  const stroke = 11;
   const normalizedRadius = radius - stroke * 2;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDashoffset = circumference - (percent / 100) * circumference;
 
   let strokeColor = '#10b981'; // green
-  if (percent < 50) strokeColor = '#f43f5e'; // red
+  if (percent < 50) strokeColor = '#ef4444'; // red
   else if (percent < 70) strokeColor = '#f59e0b'; // amber
-  else if (percent < 85) strokeColor = '#3b82f6'; // blue
+  else if (percent < 85) strokeColor = '#0284c7'; // blue
 
   return `
     <div class="relative inline-flex items-center justify-center">
       <svg height="${radius * 2}" width="${radius * 2}" class="transform -rotate-90">
         <circle
-          stroke="#e2e8f0"
+          stroke="#f1f5f9"
           fill="transparent"
           stroke-width="${stroke}"
           r="${normalizedRadius}"
@@ -840,8 +1047,8 @@ function renderCircularGauge(percent, grade) {
         />
       </svg>
       <div class="absolute flex flex-col items-center">
-        <span class="text-2xl font-bold tracking-tight text-slate-800">${percent}%</span>
-        <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background-color: ${strokeColor}20; color: ${strokeColor}">
+        <span class="text-3xl font-extrabold tracking-tight text-slate-900">${percent}%</span>
+        <span class="text-xs font-bold px-2 py-0.5 rounded-full mt-0.5" style="background-color: ${strokeColor}18; color: ${strokeColor}">
           Grade ${grade}
         </span>
       </div>
@@ -854,9 +1061,9 @@ function renderDegradationChart(dataPoints, designCapMWh) {
     return `<div class="p-8 text-center text-slate-400">Insufficient history points to generate trajectory chart.</div>`;
   }
 
-  const width = 800;
-  const height = 260;
-  const padding = { top: 20, right: 30, bottom: 40, left: 65 };
+  const width = 850;
+  const height = 280;
+  const padding = { top: 30, right: 35, bottom: 45, left: 75 };
 
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
@@ -867,7 +1074,6 @@ function renderDegradationChart(dataPoints, designCapMWh) {
   const getX = (idx) => padding.left + (idx / (dataPoints.length - 1)) * chartW;
   const getY = (val) => padding.top + chartH - ((val - yMin) / (yMax - yMin)) * chartH;
 
-  // Build path
   const points = dataPoints.map((pt, idx) => ({
     x: getX(idx),
     y: getY(pt.fullChargeCapacityMWh),
@@ -887,25 +1093,30 @@ function renderDegradationChart(dataPoints, designCapMWh) {
     const val = yMin + ((yMax - yMin) / ySteps) * i;
     const yPos = getY(val);
     gridLines += `
-      <line x1="${padding.left}" y1="${yPos}" x2="${width - padding.right}" y2="${yPos}" stroke="#e2e8f0" stroke-dasharray="3 3"/>
-      <text x="${padding.left - 10}" y="${yPos + 4}" font-size="11" fill="#64748b" text-anchor="end">${Math.round(val).toLocaleString()} mWh</text>
+      <line x1="${padding.left}" y1="${yPos}" x2="${width - padding.right}" y2="${yPos}" stroke="#f1f5f9" stroke-dasharray="3 3"/>
+      <text x="${padding.left - 12}" y="${yPos + 4}" font-size="11" fill="#94a3b8" text-anchor="end" font-weight="500">${Math.round(val).toLocaleString()} mWh</text>
     `;
   }
 
-  // X-axis labels (first, middle, last)
-  const labelIndices = [0, Math.floor(points.length / 2), points.length - 1];
+  // X-axis labels (4 evenly spaced dates formatted as "Month Year")
+  const xIndices = [
+    0,
+    Math.floor(points.length * 0.33),
+    Math.floor(points.length * 0.66),
+    points.length - 1
+  ];
   let xLabels = '';
-  labelIndices.forEach(idx => {
+  xIndices.forEach(idx => {
     const pt = points[idx];
-    const cleanDate = pt.period.split('-')[0].trim();
-    xLabels += `<text x="${pt.x}" y="${height - 12}" font-size="11" fill="#64748b" text-anchor="middle">${cleanDate}</text>`;
+    const friendlyDate = parseShortDate(pt.period);
+    xLabels += `<text x="${pt.x}" y="${height - 12}" font-size="11" fill="#64748b" text-anchor="middle" font-weight="600">${friendlyDate}</text>`;
   });
 
-  // Dots for each data point
+  // Dots
   let dots = '';
-  points.forEach((p, idx) => {
+  points.forEach((p) => {
     dots += `
-      <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="cursor-pointer hover:r-6 transition-all">
+      <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="#0284c7" stroke="#ffffff" stroke-width="2.5" class="cursor-pointer">
         <title>${p.period}: ${p.val.toLocaleString()} mWh</title>
       </circle>
     `;
@@ -916,8 +1127,8 @@ function renderDegradationChart(dataPoints, designCapMWh) {
       <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto max-w-full select-none">
         <defs>
           <linearGradient id="capacityGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
-            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.30"/>
+            <stop offset="100%" stop-color="#0284c7" stop-opacity="0.0"/>
           </linearGradient>
         </defs>
 
@@ -925,16 +1136,16 @@ function renderDegradationChart(dataPoints, designCapMWh) {
         ${gridLines}
 
         <!-- Design Capacity Reference Line -->
-        <line x1="${padding.left}" y1="${designY}" x2="${width - padding.right}" y2="${designY}" stroke="#94a3b8" stroke-dasharray="4 4" stroke-width="1.5"/>
-        <text x="${width - padding.right}" y="${designY - 6}" font-size="11" fill="#64748b" text-anchor="end" font-weight="600">
-          Design Baseline (${designCapMWh.toLocaleString()} mWh)
+        <line x1="${padding.left}" y1="${designY}" x2="${width - padding.right}" y2="${designY}" stroke="#64748b" stroke-dasharray="4 4" stroke-width="1.5"/>
+        <text x="${width - padding.right}" y="${designY - 8}" font-size="11" fill="#475569" text-anchor="end" font-weight="700">
+          Factory Baseline (${designCapMWh.toLocaleString()} mWh)
         </text>
 
         <!-- Area Fill -->
         <path d="${areaPath}" fill="url(#capacityGradient)"/>
 
         <!-- Line Path -->
-        <path d="${linePath}" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${linePath}" fill="none" stroke="#0284c7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
 
         <!-- Dots -->
         ${dots}
@@ -951,23 +1162,23 @@ function renderRuntimeBar(originalStr, currentStr, percentLost) {
     <div class="space-y-3">
       <div class="flex justify-between items-center text-sm">
         <span class="text-slate-600 font-medium">Original Factory Runtime</span>
-        <span class="font-bold text-slate-800">${originalStr}</span>
+        <span class="font-bold text-slate-900">${originalStr}</span>
       </div>
-      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-        <div class="bg-indigo-500 h-3 rounded-full" style="width: 100%"></div>
+      <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden">
+        <div class="bg-sky-600 h-3.5 rounded-full" style="width: 100%"></div>
       </div>
 
       <div class="flex justify-between items-center text-sm pt-2">
         <span class="text-slate-600 font-medium">Current Observed Runtime</span>
-        <span class="font-bold text-slate-800">${currentStr}</span>
+        <span class="font-bold text-slate-900">${currentStr}</span>
       </div>
-      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-        <div class="bg-rose-500 h-3 rounded-full" style="width: ${Math.max(10, 100 - percentLost)}%"></div>
+      <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden">
+        <div class="bg-rose-500 h-3.5 rounded-full" style="width: ${Math.max(12, 100 - percentLost)}%"></div>
       </div>
 
-      <div class="flex items-center justify-between text-xs text-rose-600 font-semibold pt-1">
+      <div class="flex items-center justify-between text-xs text-rose-600 font-bold pt-1">
         <span>Lost Duration: -${percentLost}%</span>
-        <span>${originalStr} â†’ ${currentStr}</span>
+        <span>${originalStr} → ${currentStr}</span>
       </div>
     </div>
   `;
@@ -1338,27 +1549,37 @@ function generateRecommendations(health, standby, habits, battery) {
 /**
  * VoltLens God-Level UI Engine
  * Modular tabbed navigation, rich data views, and exportable Battery Certificate.
+ * 100% Vector SVG Icons (No emoji corruption). Human-friendly dates and durations.
  */
 
 
 
+
+
 function renderDashboard(data, analysis) {
-  const { systemInfo, batteries, capacityHistory, recentUsage } = data;
+  const { systemInfo, batteries, capacityHistory } = data;
   const battery = batteries[0] || {};
   const { health, runtime, standby, degradation, habits, recommendations } = analysis;
+
+  const humanReportTime = formatHumanDate(systemInfo.reportTime);
+  const humanFirstDate = formatHumanDate(degradation.firstRecordedDate);
+  const relativeAge = formatRelativeTime(degradation.firstRecordedDate);
 
   return `
     <!-- Top System Spec Bar -->
     <div class="card mb-6" style="background: linear-gradient(to right, #ffffff, #f8fafc);">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">Verified System Hardware</span>
-          <h2 class="text-xl font-bold text-slate-900">${systemInfo.systemProductName}</h2>
-          <p class="text-xs text-slate-500 mt-1">Host: <strong>${systemInfo.computerName}</strong> â€¢ BIOS: <strong>${systemInfo.bios}</strong> â€¢ OS: <strong>${systemInfo.osBuild.split('.')[0]}</strong></p>
+        <div class="flex items-center gap-3.5">
+          ${ICONS.LOGO}
+          <div>
+            <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">Verified System Hardware</span>
+            <h2 class="text-xl font-bold text-slate-900">${systemInfo.systemProductName}</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Host: <strong>${systemInfo.computerName}</strong> • BIOS: <strong>${systemInfo.bios}</strong></p>
+          </div>
         </div>
         <div class="flex items-center gap-6 text-sm">
           <div>
-            <span class="text-xs text-slate-400 block">Battery Model</span>
+            <span class="text-xs text-slate-400 block">Battery Chemistry</span>
             <span class="font-semibold text-slate-800">${battery.name || 'OEM Battery'} (${battery.chemistry || 'LiP'})</span>
           </div>
           <div>
@@ -1367,10 +1588,10 @@ function renderDashboard(data, analysis) {
           </div>
           <div>
             <span class="text-xs text-slate-400 block">Report Time</span>
-            <span class="font-semibold text-slate-800">${systemInfo.reportTime}</span>
+            <span class="font-semibold text-slate-800">${humanReportTime}</span>
           </div>
           <button onclick="window.print()" class="btn btn-secondary text-xs no-print">
-            ðŸ–¨ï¸ Print / Save PDF
+            ${ICONS.PRINT} Print / PDF
           </button>
         </div>
       </div>
@@ -1378,10 +1599,18 @@ function renderDashboard(data, analysis) {
 
     <!-- Navigation Tabs -->
     <div class="tabs-nav no-print">
-      <button class="tab-btn active" onclick="switchTab('tab-overview')">ðŸ“Š Overview & Vitals</button>
-      <button class="tab-btn" onclick="switchTab('tab-degradation')">ðŸ“ˆ Degradation Trajectory</button>
-      <button class="tab-btn" onclick="switchTab('tab-standby')">ðŸ¦‡ Sleep Drain Auditor</button>
-      <button class="tab-btn" onclick="switchTab('tab-certificate')">ðŸ“œ Battery Certificate</button>
+      <button class="tab-btn active" onclick="switchTab('tab-overview')">
+        ${ICONS.DASHBOARD} Overview & Vitals
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-degradation')">
+        ${ICONS.TRAJECTORY} Degradation Curve
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-standby')">
+        ${ICONS.STANDBY} Sleep Drain Auditor
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-certificate')">
+        ${ICONS.CERTIFICATE} Battery Certificate
+      </button>
     </div>
 
     <!-- TAB 1: OVERVIEW -->
@@ -1395,13 +1624,13 @@ function renderDashboard(data, analysis) {
               <h3 class="font-bold text-slate-900 text-base">Battery Health Score</h3>
               <p class="text-xs text-slate-500">True chemical retention vs factory spec</p>
             </div>
-            <span class="proof-pill" title="${health.proof}">Proof â„¹ï¸</span>
+            <span class="proof-pill" title="${health.proof}">Proof</span>
           </div>
           <div class="flex items-center gap-5 my-3">
             ${renderCircularGauge(health.healthPercent, health.grade)}
             <div class="space-y-1">
               <p class="text-xs font-bold text-slate-800">${health.summary}</p>
-              <p class="text-xs text-slate-500">Lost Capacity: <span class="font-bold text-rose-600">${health.lostCapacityMWh.toLocaleString()} mWh</span> (-${health.lostPercent}%)</p>
+              <p class="text-xs text-slate-500">Permanent Loss: <span class="font-bold text-rose-600">${health.lostCapacityMWh.toLocaleString()} mWh</span> (-${health.lostPercent}%)</p>
             </div>
           </div>
           <div class="pt-3 border-t flex justify-between text-xs text-slate-600">
@@ -1420,9 +1649,9 @@ function renderDashboard(data, analysis) {
               <h3 class="font-bold text-slate-900 text-base">Lost Portable Runtime</h3>
               <p class="text-xs text-slate-500">Active screen-on time vs factory baseline</p>
             </div>
-            <span class="proof-pill" title="${runtime.proof}">Proof â„¹ï¸</span>
+            <span class="proof-pill" title="${runtime.proof}">Proof</span>
           </div>
-          ${runtime.hasData ? renderRuntimeBar(runtime.originalRuntime, runtime.currentRuntime, runtime.percentLost) : '<div class="text-xs text-slate-400 py-6 text-center">Runtime estimate logs not available.</div>'}
+          ${runtime.hasData ? renderRuntimeBar(formatHumanDuration(runtime.originalRuntime), formatHumanDuration(runtime.currentRuntime), runtime.percentLost) : '<div class="text-xs text-slate-400 py-6 text-center">Runtime estimate logs not available.</div>'}
         </div>
 
         <!-- Hero 3: Standby Vampire Drain -->
@@ -1432,7 +1661,7 @@ function renderDashboard(data, analysis) {
               <h3 class="font-bold text-slate-900 text-base">Sleep Drain Auditor</h3>
               <p class="text-xs text-slate-500">Modern standby power loss rate</p>
             </div>
-            <span class="proof-pill" title="${standby.proof}">Proof â„¹ï¸</span>
+            <span class="proof-pill" title="${standby.proof}">Proof</span>
           </div>
           <div class="my-2">
             <div class="flex items-center gap-2 mb-2">
@@ -1447,7 +1676,7 @@ function renderDashboard(data, analysis) {
           </div>
           <div class="pt-3 border-t text-xs text-slate-500">
             ${standby.worstIncidents && standby.worstIncidents.length > 0
-              ? `Worst Incident: Lost <strong>${standby.worstIncidents[0].dropPct}%</strong> in ${standby.worstIncidents[0].durationHours}h (${standby.worstIncidents[0].drainRatePerHour}%/hr)`
+              ? `Worst Incident: Lost <strong>${standby.worstIncidents[0].dropPct}%</strong> in ${formatHumanDuration(standby.worstIncidents[0].durationHours)} (${standby.worstIncidents[0].drainRatePerHour}%/hr)`
               : 'No abnormal standby leaks detected in past 7 days.'}
           </div>
         </div>
@@ -1462,7 +1691,7 @@ function renderDashboard(data, analysis) {
               <h3 class="font-bold text-slate-900 text-base">Power Source & Habit Profile</h3>
               <p class="text-xs text-slate-500">Plugged-in AC vs Battery operational split</p>
             </div>
-            <span class="proof-pill" title="${habits.proof}">Proof â„¹ï¸</span>
+            <span class="proof-pill" title="${habits.proof}">Proof</span>
           </div>
           <div class="space-y-4">
             <div class="flex items-center justify-between text-sm">
@@ -1494,7 +1723,7 @@ function renderDashboard(data, analysis) {
               }">
                 <div class="font-bold mb-0.5">${r.title}</div>
                 <p class="mb-1.5 opacity-90">${r.desc}</p>
-                <div class="font-semibold text-slate-900">ðŸ‘‰ ${r.action}</div>
+                <div class="font-semibold text-slate-900">Recommendation: ${r.action}</div>
               </div>
             `).join('')}
           </div>
@@ -1508,15 +1737,15 @@ function renderDashboard(data, analysis) {
         <div class="flex justify-between items-center mb-4">
           <div>
             <h3 class="font-bold text-slate-900 text-base">Full Capacity Degradation Curve</h3>
-            <p class="text-xs text-slate-500">Plotted from earliest recorded date (${degradation.firstRecordedDate || 'Day 1'}) to today</p>
+            <p class="text-xs text-slate-500">Tracking capacity from ${humanFirstDate} (${relativeAge}) to today</p>
           </div>
-          <span class="proof-pill" title="${degradation.proof}">Proof â„¹ï¸</span>
+          <span class="proof-pill" title="${degradation.proof}">Proof</span>
         </div>
         ${renderDegradationChart(degradation.dataPoints, health.designCapacityMWh || 40000)}
       </div>
 
       <div class="card">
-        <h3 class="font-bold text-slate-900 text-base mb-3">Chronological Capacity History Table</h3>
+        <h3 class="font-bold text-slate-900 text-base mb-3">Chronological Capacity History</h3>
         <div class="table-container">
           <table class="data-table">
             <thead>
@@ -1530,8 +1759,8 @@ function renderDashboard(data, analysis) {
             <tbody>
               ${(capacityHistory || []).slice().reverse().map(row => `
                 <tr>
-                  <td>${row.period}</td>
-                  <td><strong>${(row.fullChargeCapacityMWh || 0).toLocaleString()} mWh</strong></td>
+                  <td><strong>${formatHumanDate(row.period)}</strong></td>
+                  <td>${(row.fullChargeCapacityMWh || 0).toLocaleString()} mWh</td>
                   <td>${(row.designCapacityMWh || 0).toLocaleString()} mWh</td>
                   <td><span class="badge ${row.healthPercent >= 80 ? 'badge-good' : row.healthPercent >= 65 ? 'badge-moderate' : 'badge-degraded'}">${row.healthPercent}%</span></td>
                 </tr>
@@ -1546,10 +1775,10 @@ function renderDashboard(data, analysis) {
     <div id="tab-standby" class="tab-content" style="display:none;">
       <div class="card mb-6">
         <h3 class="font-bold text-slate-900 text-base mb-1">Modern Standby ("Vampire Drain") Diagnostics</h3>
-        <p class="text-xs text-slate-500 mb-4">Detection of background battery drain when the laptop lid is closed or system is sleeping</p>
+        <p class="text-xs text-slate-500 mb-4">Audit of background battery loss while the laptop lid is closed or system is in sleep mode</p>
         
         <div class="p-4 rounded-lg bg-sky-50 border border-sky-200 text-xs text-sky-900 mb-6">
-          <strong>Why does this happen?</strong> Windows 10/11 "Modern Standby" keeps network radios and background tasks running during sleep. If apps or drivers misbehave, the laptop stays warm inside a backpack and drains 20â€“50% of its battery.
+          <strong>Why does this happen?</strong> Windows Modern Standby keeps network radios and background tasks running during sleep. If apps or drivers misbehave, the laptop stays warm inside a backpack and drains significant battery.
         </div>
 
         <h4 class="font-bold text-slate-800 text-sm mb-3">Detected Sleep Drain Incidents</h4>
@@ -1567,8 +1796,8 @@ function renderDashboard(data, analysis) {
             <tbody>
               ${(standby.worstIncidents || []).length > 0 ? standby.worstIncidents.map(inc => `
                 <tr>
-                  <td>${inc.start}</td>
-                  <td>${inc.durationHours} hours</td>
+                  <td>${formatHumanDate(inc.start)}</td>
+                  <td>${formatHumanDuration(inc.durationHours)}</td>
                   <td class="text-rose-600 font-bold">-${inc.dropPct}%</td>
                   <td>${inc.drainRatePerHour}% / hr</td>
                   <td><span class="badge ${inc.severity === 'Severe' ? 'badge-critical' : 'badge-moderate'}">${inc.severity} Leak</span></td>
@@ -1587,11 +1816,11 @@ function renderDashboard(data, analysis) {
         <div class="flex justify-between items-start border-b pb-4 mb-6">
           <div>
             <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Official Battery Health Certificate</h2>
-            <p class="text-xs text-slate-500">Certified Diagnostic Report â€¢ Generated via VoltLens Open-Source Engine</p>
+            <p class="text-xs text-slate-500">Certified Diagnostic Report • Generated via Battery Intelligence Engine</p>
           </div>
           <div class="text-right">
             <span class="badge badge-excellent text-sm py-1 px-3">Grade ${health.grade}</span>
-            <div class="text-xs text-slate-400 mt-1">Date: ${systemInfo.reportTime}</div>
+            <div class="text-xs text-slate-400 mt-1">Date: ${humanReportTime}</div>
           </div>
         </div>
 
@@ -1628,7 +1857,7 @@ function renderDashboard(data, analysis) {
             <span>Audited with 100% truth-grounding from Windows ACPI power subsystem registers.</span>
           </div>
           <button onclick="window.print()" class="btn btn-primary text-xs no-print">
-            ðŸ–¨ï¸ Print Certificate
+            ${ICONS.PRINT} Print Certificate
           </button>
         </div>
       </div>
@@ -1729,4 +1958,3 @@ document.getElementById('btn-demo').addEventListener('click', window.loadSampleR
 </script>
 </body>
 </html>
-

@@ -1,27 +1,37 @@
 /**
  * VoltLens God-Level UI Engine
  * Modular tabbed navigation, rich data views, and exportable Battery Certificate.
+ * 100% Vector SVG Icons (No emoji corruption). Human-friendly dates and durations.
  */
 
 import { renderCircularGauge, renderDegradationChart, renderRuntimeBar } from './charts.js';
+import { formatHumanDate, formatHumanDuration, formatRelativeTime } from './formatters.js';
+import { ICONS } from './icons.js';
 
 export function renderDashboard(data, analysis) {
-  const { systemInfo, batteries, capacityHistory, recentUsage } = data;
+  const { systemInfo, batteries, capacityHistory } = data;
   const battery = batteries[0] || {};
   const { health, runtime, standby, degradation, habits, recommendations } = analysis;
+
+  const humanReportTime = formatHumanDate(systemInfo.reportTime);
+  const humanFirstDate = formatHumanDate(degradation.firstRecordedDate);
+  const relativeAge = formatRelativeTime(degradation.firstRecordedDate);
 
   return `
     <!-- Top System Spec Bar -->
     <div class="card mb-6" style="background: linear-gradient(to right, #ffffff, #f8fafc);">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">Verified System Hardware</span>
-          <h2 class="text-xl font-bold text-slate-900">${systemInfo.systemProductName}</h2>
-          <p class="text-xs text-slate-500 mt-1">Host: <strong>${systemInfo.computerName}</strong> • BIOS: <strong>${systemInfo.bios}</strong> • OS: <strong>${systemInfo.osBuild.split('.')[0]}</strong></p>
+        <div class="flex items-center gap-3.5">
+          ${ICONS.LOGO}
+          <div>
+            <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">Verified System Hardware</span>
+            <h2 class="text-xl font-bold text-slate-900">${systemInfo.systemProductName}</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Host: <strong>${systemInfo.computerName}</strong> • BIOS: <strong>${systemInfo.bios}</strong></p>
+          </div>
         </div>
         <div class="flex items-center gap-6 text-sm">
           <div>
-            <span class="text-xs text-slate-400 block">Battery Model</span>
+            <span class="text-xs text-slate-400 block">Battery Chemistry</span>
             <span class="font-semibold text-slate-800">${battery.name || 'OEM Battery'} (${battery.chemistry || 'LiP'})</span>
           </div>
           <div>
@@ -30,10 +40,10 @@ export function renderDashboard(data, analysis) {
           </div>
           <div>
             <span class="text-xs text-slate-400 block">Report Time</span>
-            <span class="font-semibold text-slate-800">${systemInfo.reportTime}</span>
+            <span class="font-semibold text-slate-800">${humanReportTime}</span>
           </div>
           <button onclick="window.print()" class="btn btn-secondary text-xs no-print">
-            🖨️ Print / Save PDF
+            ${ICONS.PRINT} Print / PDF
           </button>
         </div>
       </div>
@@ -41,10 +51,18 @@ export function renderDashboard(data, analysis) {
 
     <!-- Navigation Tabs -->
     <div class="tabs-nav no-print">
-      <button class="tab-btn active" onclick="switchTab('tab-overview')">📊 Overview & Vitals</button>
-      <button class="tab-btn" onclick="switchTab('tab-degradation')">📈 Degradation Trajectory</button>
-      <button class="tab-btn" onclick="switchTab('tab-standby')">🦇 Sleep Drain Auditor</button>
-      <button class="tab-btn" onclick="switchTab('tab-certificate')">📜 Battery Certificate</button>
+      <button class="tab-btn active" onclick="switchTab('tab-overview')">
+        ${ICONS.DASHBOARD} Overview & Vitals
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-degradation')">
+        ${ICONS.TRAJECTORY} Degradation Curve
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-standby')">
+        ${ICONS.STANDBY} Sleep Drain Auditor
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-certificate')">
+        ${ICONS.CERTIFICATE} Battery Certificate
+      </button>
     </div>
 
     <!-- TAB 1: OVERVIEW -->
@@ -58,13 +76,13 @@ export function renderDashboard(data, analysis) {
               <h3 class="font-bold text-slate-900 text-base">Battery Health Score</h3>
               <p class="text-xs text-slate-500">True chemical retention vs factory spec</p>
             </div>
-            <span class="proof-pill" title="${health.proof}">Proof ℹ️</span>
+            <span class="proof-pill" title="${health.proof}">Proof</span>
           </div>
           <div class="flex items-center gap-5 my-3">
             ${renderCircularGauge(health.healthPercent, health.grade)}
             <div class="space-y-1">
               <p class="text-xs font-bold text-slate-800">${health.summary}</p>
-              <p class="text-xs text-slate-500">Lost Capacity: <span class="font-bold text-rose-600">${health.lostCapacityMWh.toLocaleString()} mWh</span> (-${health.lostPercent}%)</p>
+              <p class="text-xs text-slate-500">Permanent Loss: <span class="font-bold text-rose-600">${health.lostCapacityMWh.toLocaleString()} mWh</span> (-${health.lostPercent}%)</p>
             </div>
           </div>
           <div class="pt-3 border-t flex justify-between text-xs text-slate-600">
@@ -83,9 +101,9 @@ export function renderDashboard(data, analysis) {
               <h3 class="font-bold text-slate-900 text-base">Lost Portable Runtime</h3>
               <p class="text-xs text-slate-500">Active screen-on time vs factory baseline</p>
             </div>
-            <span class="proof-pill" title="${runtime.proof}">Proof ℹ️</span>
+            <span class="proof-pill" title="${runtime.proof}">Proof</span>
           </div>
-          ${runtime.hasData ? renderRuntimeBar(runtime.originalRuntime, runtime.currentRuntime, runtime.percentLost) : '<div class="text-xs text-slate-400 py-6 text-center">Runtime estimate logs not available.</div>'}
+          ${runtime.hasData ? renderRuntimeBar(formatHumanDuration(runtime.originalRuntime), formatHumanDuration(runtime.currentRuntime), runtime.percentLost) : '<div class="text-xs text-slate-400 py-6 text-center">Runtime estimate logs not available.</div>'}
         </div>
 
         <!-- Hero 3: Standby Vampire Drain -->
@@ -95,7 +113,7 @@ export function renderDashboard(data, analysis) {
               <h3 class="font-bold text-slate-900 text-base">Sleep Drain Auditor</h3>
               <p class="text-xs text-slate-500">Modern standby power loss rate</p>
             </div>
-            <span class="proof-pill" title="${standby.proof}">Proof ℹ️</span>
+            <span class="proof-pill" title="${standby.proof}">Proof</span>
           </div>
           <div class="my-2">
             <div class="flex items-center gap-2 mb-2">
@@ -110,7 +128,7 @@ export function renderDashboard(data, analysis) {
           </div>
           <div class="pt-3 border-t text-xs text-slate-500">
             ${standby.worstIncidents && standby.worstIncidents.length > 0
-              ? `Worst Incident: Lost <strong>${standby.worstIncidents[0].dropPct}%</strong> in ${standby.worstIncidents[0].durationHours}h (${standby.worstIncidents[0].drainRatePerHour}%/hr)`
+              ? `Worst Incident: Lost <strong>${standby.worstIncidents[0].dropPct}%</strong> in ${formatHumanDuration(standby.worstIncidents[0].durationHours)} (${standby.worstIncidents[0].drainRatePerHour}%/hr)`
               : 'No abnormal standby leaks detected in past 7 days.'}
           </div>
         </div>
@@ -125,7 +143,7 @@ export function renderDashboard(data, analysis) {
               <h3 class="font-bold text-slate-900 text-base">Power Source & Habit Profile</h3>
               <p class="text-xs text-slate-500">Plugged-in AC vs Battery operational split</p>
             </div>
-            <span class="proof-pill" title="${habits.proof}">Proof ℹ️</span>
+            <span class="proof-pill" title="${habits.proof}">Proof</span>
           </div>
           <div class="space-y-4">
             <div class="flex items-center justify-between text-sm">
@@ -157,7 +175,7 @@ export function renderDashboard(data, analysis) {
               }">
                 <div class="font-bold mb-0.5">${r.title}</div>
                 <p class="mb-1.5 opacity-90">${r.desc}</p>
-                <div class="font-semibold text-slate-900">👉 ${r.action}</div>
+                <div class="font-semibold text-slate-900">Recommendation: ${r.action}</div>
               </div>
             `).join('')}
           </div>
@@ -171,15 +189,15 @@ export function renderDashboard(data, analysis) {
         <div class="flex justify-between items-center mb-4">
           <div>
             <h3 class="font-bold text-slate-900 text-base">Full Capacity Degradation Curve</h3>
-            <p class="text-xs text-slate-500">Plotted from earliest recorded date (${degradation.firstRecordedDate || 'Day 1'}) to today</p>
+            <p class="text-xs text-slate-500">Tracking capacity from ${humanFirstDate} (${relativeAge}) to today</p>
           </div>
-          <span class="proof-pill" title="${degradation.proof}">Proof ℹ️</span>
+          <span class="proof-pill" title="${degradation.proof}">Proof</span>
         </div>
         ${renderDegradationChart(degradation.dataPoints, health.designCapacityMWh || 40000)}
       </div>
 
       <div class="card">
-        <h3 class="font-bold text-slate-900 text-base mb-3">Chronological Capacity History Table</h3>
+        <h3 class="font-bold text-slate-900 text-base mb-3">Chronological Capacity History</h3>
         <div class="table-container">
           <table class="data-table">
             <thead>
@@ -193,8 +211,8 @@ export function renderDashboard(data, analysis) {
             <tbody>
               ${(capacityHistory || []).slice().reverse().map(row => `
                 <tr>
-                  <td>${row.period}</td>
-                  <td><strong>${(row.fullChargeCapacityMWh || 0).toLocaleString()} mWh</strong></td>
+                  <td><strong>${formatHumanDate(row.period)}</strong></td>
+                  <td>${(row.fullChargeCapacityMWh || 0).toLocaleString()} mWh</td>
                   <td>${(row.designCapacityMWh || 0).toLocaleString()} mWh</td>
                   <td><span class="badge ${row.healthPercent >= 80 ? 'badge-good' : row.healthPercent >= 65 ? 'badge-moderate' : 'badge-degraded'}">${row.healthPercent}%</span></td>
                 </tr>
@@ -209,10 +227,10 @@ export function renderDashboard(data, analysis) {
     <div id="tab-standby" class="tab-content" style="display:none;">
       <div class="card mb-6">
         <h3 class="font-bold text-slate-900 text-base mb-1">Modern Standby ("Vampire Drain") Diagnostics</h3>
-        <p class="text-xs text-slate-500 mb-4">Detection of background battery drain when the laptop lid is closed or system is sleeping</p>
+        <p class="text-xs text-slate-500 mb-4">Audit of background battery loss while the laptop lid is closed or system is in sleep mode</p>
         
         <div class="p-4 rounded-lg bg-sky-50 border border-sky-200 text-xs text-sky-900 mb-6">
-          <strong>Why does this happen?</strong> Windows 10/11 "Modern Standby" keeps network radios and background tasks running during sleep. If apps or drivers misbehave, the laptop stays warm inside a backpack and drains 20–50% of its battery.
+          <strong>Why does this happen?</strong> Windows Modern Standby keeps network radios and background tasks running during sleep. If apps or drivers misbehave, the laptop stays warm inside a backpack and drains significant battery.
         </div>
 
         <h4 class="font-bold text-slate-800 text-sm mb-3">Detected Sleep Drain Incidents</h4>
@@ -230,8 +248,8 @@ export function renderDashboard(data, analysis) {
             <tbody>
               ${(standby.worstIncidents || []).length > 0 ? standby.worstIncidents.map(inc => `
                 <tr>
-                  <td>${inc.start}</td>
-                  <td>${inc.durationHours} hours</td>
+                  <td>${formatHumanDate(inc.start)}</td>
+                  <td>${formatHumanDuration(inc.durationHours)}</td>
                   <td class="text-rose-600 font-bold">-${inc.dropPct}%</td>
                   <td>${inc.drainRatePerHour}% / hr</td>
                   <td><span class="badge ${inc.severity === 'Severe' ? 'badge-critical' : 'badge-moderate'}">${inc.severity} Leak</span></td>
@@ -250,11 +268,11 @@ export function renderDashboard(data, analysis) {
         <div class="flex justify-between items-start border-b pb-4 mb-6">
           <div>
             <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Official Battery Health Certificate</h2>
-            <p class="text-xs text-slate-500">Certified Diagnostic Report • Generated via VoltLens Open-Source Engine</p>
+            <p class="text-xs text-slate-500">Certified Diagnostic Report • Generated via Battery Intelligence Engine</p>
           </div>
           <div class="text-right">
             <span class="badge badge-excellent text-sm py-1 px-3">Grade ${health.grade}</span>
-            <div class="text-xs text-slate-400 mt-1">Date: ${systemInfo.reportTime}</div>
+            <div class="text-xs text-slate-400 mt-1">Date: ${humanReportTime}</div>
           </div>
         </div>
 
@@ -291,7 +309,7 @@ export function renderDashboard(data, analysis) {
             <span>Audited with 100% truth-grounding from Windows ACPI power subsystem registers.</span>
           </div>
           <button onclick="window.print()" class="btn btn-primary text-xs no-print">
-            🖨️ Print Certificate
+            ${ICONS.PRINT} Print Certificate
           </button>
         </div>
       </div>

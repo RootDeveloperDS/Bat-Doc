@@ -124,16 +124,27 @@
     <!-- Header -->
     <header class="app-header">
       <div class="brand">
-        <div class="brand-icon">⚡</div>
+        <svg width="38" height="38" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="10" fill="url(#brand_grad)" />
+          <rect x="10" y="14" width="18" height="12" rx="2.5" stroke="#ffffff" stroke-width="2" />
+          <path d="M30 18V22" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+          <path d="M20 10L14 21H20L18 30L26 18H20L22 10Z" fill="#ffffff" />
+          <defs>
+            <linearGradient id="brand_grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#0284c7" />
+              <stop offset="1" stop-color="#0369a1" />
+            </linearGradient>
+          </defs>
+        </svg>
         <div>
-          <h1 class="brand-title">VoltLens</h1>
-          <p class="brand-tagline">100% Grounded Windows Battery Intelligence Diagnostic</p>
+          <h1 class="brand-title">Battery Intelligence Diagnostic</h1>
+          <p class="brand-tagline">100% Grounded Hardware Health & Degradation Analytics</p>
         </div>
       </div>
       <div class="flex items-center gap-3 no-print">
         <button id="btn-demo" class="btn btn-secondary text-xs">Load Demo Data</button>
         <label for="file-input" class="btn btn-primary text-xs cursor-pointer">
-          📁 Select battery-report.html
+          Select battery-report.html
           <input type="file" id="file-input" accept=".html,.htm" style="display:none;">
         </label>
       </div>
@@ -141,15 +152,20 @@
 
     <!-- Dropzone View (Visible when no data loaded) -->
     <div id="dropzone-view" class="dropzone no-print">
-      <div class="text-4xl mb-3">🔋</div>
-      <h2 class="text-lg font-bold text-slate-800 mb-1">Drag and drop your battery-report.html here</h2>
+      <div style="display:flex; justify-content:center; margin-bottom:1rem;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </div>
+      <h2 class="text-lg font-bold text-slate-900 mb-1">Drag and drop your battery-report.html here</h2>
       <p class="text-sm text-slate-500 mb-4">100% Client-Side & Private. Zero data leaves your computer.</p>
       <div class="inline-flex gap-2">
         <button onclick="document.getElementById('file-input').click()" class="btn btn-primary text-xs">Browse Local File</button>
-        <button onclick="loadSampleReport()" class="btn btn-secondary text-xs">See Example Report</button>
+        <button onclick="loadSampleReport()" class="btn btn-secondary text-xs">Explore Demo</button>
       </div>
       <div class="mt-6 text-xs text-slate-400 max-w-md mx-auto">
-        Don't have the file? Run <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">powercfg /batteryreport</code> in CMD, or double-click <strong>voltlens.bat</strong>.
+        Don't have the file? Run <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">powercfg /batteryreport</code> in CMD, or double-click the launcher script.
       </div>
     </div>
 
