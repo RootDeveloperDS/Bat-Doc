@@ -1,7 +1,7 @@
 /**
- * VoltLens Native SVG Vector Charting Engine
+ * BATDOC Native SVG Vector Charting Engine
  * 100% Offline: Zero external dependencies, pure mathematical SVG rendering.
- * Human-friendly labels and crisp typography.
+ * Human-friendly labels, crisp typography, responsive layout.
  */
 
 function parseShortDate(str) {
@@ -15,43 +15,54 @@ function parseShortDate(str) {
 }
 
 export function renderCircularGauge(percent, grade) {
-  const radius = 56;
-  const stroke = 11;
-  const normalizedRadius = radius - stroke * 2;
-  const circumference = normalizedRadius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percent / 100) * circumference;
+  const size = 140;
+  const strokeWidth = 11;
+  const center = size / 2;
+  const radius = center - strokeWidth;
+  const circumference = 2 * Math.PI * radius;
+  const safePercent = Math.min(100, Math.max(0, percent));
+  const strokeDashoffset = circumference - (safePercent / 100) * circumference;
 
-  let strokeColor = '#10b981'; // green
-  if (percent < 50) strokeColor = '#ef4444'; // red
-  else if (percent < 70) strokeColor = '#f59e0b'; // amber
-  else if (percent < 85) strokeColor = '#0284c7'; // blue
+  let strokeColor = '#10b981'; // emerald green
+  let bgTint = '#ecfdf5';
+  if (percent < 50) {
+    strokeColor = '#ef4444'; // rose red
+    bgTint = '#fff1f2';
+  } else if (percent < 70) {
+    strokeColor = '#f59e0b'; // amber orange
+    bgTint = '#fffbeb';
+  } else if (percent < 85) {
+    strokeColor = '#0284c7'; // sky blue
+    bgTint = '#f0f9ff';
+  }
 
   return `
-    <div class="relative inline-flex items-center justify-center">
-      <svg height="${radius * 2}" width="${radius * 2}" class="transform -rotate-90">
+    <div class="gauge-svg-wrap">
+      <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="gauge-ring-svg">
         <circle
+          cx="${center}"
+          cy="${center}"
+          r="${radius}"
+          fill="none"
           stroke="#f1f5f9"
-          fill="transparent"
-          stroke-width="${stroke}"
-          r="${normalizedRadius}"
-          cx="${radius}"
-          cy="${radius}"
+          stroke-width="${strokeWidth}"
         />
         <circle
+          cx="${center}"
+          cy="${center}"
+          r="${radius}"
+          fill="none"
           stroke="${strokeColor}"
-          fill="transparent"
-          stroke-width="${stroke}"
-          stroke-dasharray="${circumference} ${circumference}"
-          style="stroke-dashoffset: ${strokeDashoffset}; transition: stroke-dashoffset 1s ease-in-out;"
+          stroke-width="${strokeWidth}"
+          stroke-dasharray="${circumference}"
+          stroke-dashoffset="${strokeDashoffset}"
           stroke-linecap="round"
-          r="${normalizedRadius}"
-          cx="${radius}"
-          cy="${radius}"
+          style="transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);"
         />
       </svg>
-      <div class="absolute flex flex-col items-center">
-        <span class="text-3xl font-extrabold tracking-tight text-slate-900">${percent}%</span>
-        <span class="text-xs font-bold px-2 py-0.5 rounded-full mt-0.5" style="background-color: ${strokeColor}18; color: ${strokeColor}">
+      <div class="gauge-center-text">
+        <span class="gauge-pct">${percent}%</span>
+        <span class="gauge-grade-badge" style="background-color: ${bgTint}; color: ${strokeColor}; border: 1px solid ${strokeColor}33;">
           Grade ${grade}
         </span>
       </div>
@@ -59,14 +70,48 @@ export function renderCircularGauge(percent, grade) {
   `;
 }
 
+export function renderRuntimeBar(originalStr, currentStr, percentLost) {
+  const retainedPct = Math.max(12, Math.min(100, 100 - percentLost));
+  return `
+    <div class="runtime-card-body">
+      <div class="runtime-row">
+        <div class="runtime-label-row">
+          <span class="runtime-type">Factory Spec Baseline</span>
+          <span class="runtime-val">${originalStr}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill progress-fill-original" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <div class="runtime-row">
+        <div class="runtime-label-row">
+          <span class="runtime-type">Observed Active Runtime</span>
+          <span class="runtime-val">${currentStr}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill progress-fill-current" style="width: ${retainedPct}%;"></div>
+        </div>
+      </div>
+
+      <div class="runtime-delta-box">
+        <span class="delta-badge">-${percentLost}% Runtime Drop</span>
+        <div class="delta-text">
+          <span>${originalStr} factory → <strong>${currentStr}</strong> current</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export function renderDegradationChart(dataPoints, designCapMWh) {
   if (!dataPoints || dataPoints.length < 2) {
-    return `<div class="p-8 text-center text-slate-400">Insufficient history points to generate trajectory chart.</div>`;
+    return `<div class="chart-empty-state">Insufficient history recorded by Windows to generate trajectory curve.</div>`;
   }
 
   const width = 850;
   const height = 280;
-  const padding = { top: 30, right: 35, bottom: 45, left: 75 };
+  const padding = { top: 32, right: 35, bottom: 45, left: 75 };
 
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
@@ -126,11 +171,11 @@ export function renderDegradationChart(dataPoints, designCapMWh) {
   });
 
   return `
-    <div class="w-full overflow-x-auto">
-      <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto max-w-full select-none">
+    <div class="chart-wrapper">
+      <svg viewBox="0 0 ${width} ${height}" class="chart-svg select-none">
         <defs>
           <linearGradient id="capacityGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.30"/>
+            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.25"/>
             <stop offset="100%" stop-color="#0284c7" stop-opacity="0.0"/>
           </linearGradient>
         </defs>
@@ -139,7 +184,7 @@ export function renderDegradationChart(dataPoints, designCapMWh) {
         ${gridLines}
 
         <!-- Design Capacity Reference Line -->
-        <line x1="${padding.left}" y1="${designY}" x2="${width - padding.right}" y2="${designY}" stroke="#64748b" stroke-dasharray="4 4" stroke-width="1.5"/>
+        <line x1="${padding.left}" y1="${designY}" x2="${width - padding.right}" y2="${designY}" stroke="#94a3b8" stroke-dasharray="4 4" stroke-width="1.5"/>
         <text x="${width - padding.right}" y="${designY - 8}" font-size="11" fill="#475569" text-anchor="end" font-weight="700">
           Factory Baseline (${designCapMWh.toLocaleString()} mWh)
         </text>
@@ -156,33 +201,6 @@ export function renderDegradationChart(dataPoints, designCapMWh) {
         <!-- X Labels -->
         ${xLabels}
       </svg>
-    </div>
-  `;
-}
-
-export function renderRuntimeBar(originalStr, currentStr, percentLost) {
-  return `
-    <div class="space-y-3">
-      <div class="flex justify-between items-center text-sm">
-        <span class="text-slate-600 font-medium">Original Factory Runtime</span>
-        <span class="font-bold text-slate-900">${originalStr}</span>
-      </div>
-      <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden">
-        <div class="bg-sky-600 h-3.5 rounded-full" style="width: 100%"></div>
-      </div>
-
-      <div class="flex justify-between items-center text-sm pt-2">
-        <span class="text-slate-600 font-medium">Current Observed Runtime</span>
-        <span class="font-bold text-slate-900">${currentStr}</span>
-      </div>
-      <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden">
-        <div class="bg-rose-500 h-3.5 rounded-full" style="width: ${Math.max(12, 100 - percentLost)}%"></div>
-      </div>
-
-      <div class="flex items-center justify-between text-xs text-rose-600 font-bold pt-1">
-        <span>Lost Duration: -${percentLost}%</span>
-        <span>${originalStr} → ${currentStr}</span>
-      </div>
     </div>
   `;
 }

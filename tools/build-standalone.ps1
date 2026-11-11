@@ -47,7 +47,10 @@ $uiClean
 
 $htmlContent = Get-Content $templateFile -Raw -Encoding UTF8
 
-# Replace embedded style with src/styles.css
+# Remove external stylesheet link
+$htmlContent = $htmlContent -replace '<link rel="stylesheet" href="src/styles.css">', ''
+
+# Replace embedded style with complete src/styles.css
 $styleRegex = '<style>[\s\S]*?</style>'
 $htmlContent = $htmlContent -replace $styleRegex, "<style>`n$cssContent`n</style>"
 
@@ -59,10 +62,10 @@ $combinedJs
 
 window.switchTab = function(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.segmented-btn, .tab-btn').forEach(el => el.classList.remove('active'));
   const target = document.getElementById(tabId);
   if (target) target.style.display = 'block';
-  const btns = document.querySelectorAll('.tab-btn');
+  const btns = document.querySelectorAll('.segmented-btn, .tab-btn');
   btns.forEach(btn => {
     if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
       btn.classList.add('active');
@@ -149,7 +152,8 @@ document.getElementById('btn-demo').addEventListener('click', window.loadSampleR
 </script>
 "@
 
-$finalStandalone = $htmlContent -replace $moduleRegex, $inlineScriptBlock
-[System.IO.File]::WriteAllText($standaloneOutput, $finalStandalone, [System.Text.Encoding]::UTF8)
+$htmlContent = $htmlContent -replace $moduleRegex, $inlineScriptBlock
 
-Write-Host "[BATDOC] Standalone bundle successfully built: $standaloneOutput"
+[System.IO.File]::WriteAllText($standaloneOutput, $htmlContent, [System.Text.Encoding]::UTF8)
+
+Write-Host "[BATDOC] Successfully compiled standalone package: $standaloneOutput"
