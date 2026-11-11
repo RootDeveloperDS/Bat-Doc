@@ -1,0 +1,50 @@
+name: Package and Publish BATDOC Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Standalone Web Template
+        run: node tools/build-standalone.js
+
+      - name: Validate Standalone Bundle
+        run: node tools/test-bundle.js
+
+      - name: Compile Native Windows Launcher (batdoc.exe)
+        shell: powershell
+        run: .\tools\build-exe.ps1
+
+      - name: Assemble Distribution Zip
+        shell: powershell
+        run: |
+          Compress-Archive -Path batdoc.exe, batdoc.bat, batdoc.ps1, batdoc-standalone.html, README.md, LICENSE -DestinationPath BatDoc-Windows.zip -Force
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            batdoc.exe
+            batdoc.bat
+            batdoc.ps1
+            batdoc-standalone.html
+            BatDoc-Windows.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false

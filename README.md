@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg)](https://microsoft.com/windows)
 [![Privacy: 100% Offline](https://img.shields.io/badge/Privacy-100%25%20Offline%20%26%20Local-success.svg)](#-privacy--security-guarantee)
-[![PWA: Installable](https://img.shields.io/badge/PWA-Installable%20Desktop%20App-0284c7.svg)](#option-3-installable-desktop-app-pwa)
+[![PWA: Installable](https://img.shields.io/badge/PWA-Installable%20Desktop%20App-0284c7.svg)](#option-4-installable-desktop-app-pwa)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20Install-brightgreen.svg)](#-how-any-user-in-the-world-uses-batdoc-instantly)
 
 ---
@@ -15,7 +15,14 @@
 
 BATDOC requires **zero developer tools, zero Python, zero Node.js, and zero setup**. Choose whichever method fits your workflow:
 
-### Option 1: Instant 1-Line Command (Fastest — 3 Seconds, No Manual Download)
+### Option 1: Native Desktop Executable (1-Click, Silent Execution)
+1. Download **[`batdoc.exe`](https://github.com/RootDeveloperDS/Bat-Doc/releases)** from the latest release.
+2. **Double-click `batdoc.exe`**.
+3. **Done!** Runs completely silently (zero black terminal windows), generates `BatDoc-Report.html` on your Desktop, and opens your browser immediately.
+
+---
+
+### Option 2: Instant 1-Line Command (Fastest — 3 Seconds, No Manual Download)
 Open Windows PowerShell (press <kbd>Win</kbd> + <kbd>R</kbd>, type `powershell`, and press <kbd>Enter</kbd>), then paste:
 ```powershell
 irm https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc.ps1 | iex
@@ -24,14 +31,14 @@ irm https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc.ps1 
 
 ---
 
-### Option 2: 1-Click Double-Click Utility (For Non-Technical Users)
+### Option 3: 1-Click Double-Click Script (`batdoc.bat`)
 1. Download **[`batdoc.bat`](batdoc.bat)** directly to your computer.
 2. **Double-click `batdoc.bat`**.
-3. **Done!** Your diagnostic report pops up on your screen immediately and is saved to your Desktop.
+3. Your diagnostic report pops up on your screen immediately and is saved to your Desktop.
 
 ---
 
-### Option 3: Installable Desktop App (PWA) / Web Mirror
+### Option 4: Installable Desktop App (PWA) / Web Mirror
 1. Open the hosted web mirror: **[rootdeveloperds.github.io/Bat-Doc](https://rootdeveloperds.github.io/Bat-Doc/)** in Chrome or Edge.
 2. Click **"Install App"** in the top navigation bar or address bar.
 3. BATDOC installs directly to your **Windows Start Menu & Desktop** with its own standalone window and icon.
@@ -101,6 +108,7 @@ BATDOC follows clean, modular software engineering principles:
 
 ```text
 Bat-Doc/
+├── batdoc.exe                  # Compiled native Windows launcher (Zero console flash)
 ├── batdoc.bat                  # 1-Click Windows Batch launcher
 ├── batdoc.ps1                  # 1-Line PowerShell instant launcher
 ├── index.html                  # Standalone Web App / Drag-and-Drop Dropzone
@@ -108,8 +116,10 @@ Bat-Doc/
 ├── manifest.json               # PWA Desktop App manifest
 ├── sw.js                       # PWA Offline Service Worker (Cache-first)
 ├── assets/                     # Application branding & icons
-│   └── icon.svg                # Vector SVG brand logo
+│   ├── icon.svg                # Vector SVG brand logo
+│   └── icon.ico                # Win32 compiled application icon
 ├── src/                        # Modular source code
+│   ├── launcher.cs             # Native C# launcher source
 │   ├── parser.js               # Strict 1:1 parser for Windows powercfg tables
 │   ├── analytics.js            # Grounded math engine (Health %, Standby, Habits)
 │   ├── charts.js               # Native offline SVG vector charting engine
@@ -118,6 +128,7 @@ Bat-Doc/
 │   ├── ui.js                   # Executive dashboard rendering engine
 │   └── styles.css              # Executive light design system
 ├── tools/
+│   ├── build-exe.ps1           # Native C# compiler script (using csc.exe)
 │   ├── build-standalone.js     # Robust Node bundler compiling standalone HTML
 │   ├── build-standalone.ps1    # PowerShell wrapper for bundler
 │   └── test-bundle.js          # Automated syntax and compilation validator
@@ -140,17 +151,18 @@ If you want to contribute or modify the source modules:
    cd Bat-Doc
    ```
 2. Modify files inside `src/`.
-3. Validate and recompile the standalone zero-dependency distribution:
+3. Validate and recompile the standalone distribution and native executable:
    ```powershell
    node .\tools\test-bundle.js
    node .\tools\build-standalone.js
+   powershell -ExecutionPolicy Bypass -File .\tools\build-exe.ps1
    ```
 
 ---
 
 ## 🗺️ Future Roadmap
 
-- [ ] **Native Portable Executable (`batdoc.exe`):** Single compiled zero-dependency Windows executable with custom icon and silent execution.
+- [x] **Native Portable Executable (`batdoc.exe`):** Single compiled zero-dependency Windows executable with custom icon and silent execution.
 - [ ] **Official Microsoft Package Manager (`winget`):** Support for `winget install BatDoc`.
 - [ ] **Windows Explorer Context Menu:** Optional 1-click shortcut in Windows Explorer (*"Right Click Desktop → ⚡ Diagnose Battery with BATDOC"*).
 
