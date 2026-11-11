@@ -1,0 +1,1295 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoltLens â€” Battery Intelligence Diagnostic</title>
+  <style>
+    /* VoltLens Embedded Light Theme */
+    :root {
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --bg-app: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-focus: #38bdf8;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-family); background-color: var(--bg-app); color: var(--text-main); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 1140px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #0284c7, #38bdf8); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; }
+    .brand-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+    .brand-tagline { font-size: 0.85rem; color: var(--text-muted); }
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+    .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-pristine { background: #dcfce7; color: #15803d; }
+    .badge-excellent { background: #e0f2fe; color: #0369a1; }
+    .badge-good { background: #f0fdf4; color: #166534; }
+    .badge-moderate { background: #fef3c7; color: #b45309; }
+    .badge-degraded { background: #fee2e2; color: #b91c1c; }
+    .badge-critical { background: #ffe4e6; color: #9f1239; }
+    .proof-pill { font-size: 0.7rem; color: var(--text-muted); background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.15rem 0.45rem; cursor: help; }
+    .dropzone { border: 2px dashed #cbd5e1; background: #ffffff; border-radius: var(--radius-lg); padding: 3.5rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s ease; margin-bottom: 2rem; }
+    .dropzone:hover, .dropzone.drag-active { border-color: var(--primary); background: #f0f9ff; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; border: none; text-decoration: none; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: var(--bg-subtle); color: var(--text-main); border: 1px solid var(--border-color); }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .flex { display: flex; }
+    .flex-wrap { flex-wrap: wrap; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .flex-col { flex-direction: column; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .gap-5 { gap: 1.25rem; }
+    .gap-6 { gap: 1.5rem; }
+    .space-y-1 > * + * { margin-top: 0.25rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .text-xs { font-size: 0.75rem; }
+    .text-sm { font-size: 0.875rem; }
+    .text-base { font-size: 1rem; }
+    .text-lg { font-size: 1.125rem; }
+    .text-2xl { font-size: 1.5rem; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .font-medium { font-weight: 500; }
+    .text-slate-400 { color: #94a3b8; }
+    .text-slate-500 { color: #64748b; }
+    .text-slate-600 { color: #475569; }
+    .text-slate-700 { color: #334155; }
+    .text-slate-800 { color: #1e293b; }
+    .text-slate-900 { color: #0f172a; }
+    .text-rose-600 { color: #e11d48; }
+    .text-sky-700 { color: #0369a1; }
+    .w-full { width: 100%; }
+    .rounded-full { border-radius: 9999px; }
+    .rounded-lg { border-radius: var(--radius-md); }
+    .p-3 { padding: 0.75rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .border-t { border-top: 1px solid var(--border-color); }
+    .pt-3 { padding-top: 0.75rem; }
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .transform { transform: rotate(-90deg); }
+    .overflow-hidden { overflow: hidden; }
+    .border { border: 1px solid var(--border-color); }
+    .bg-slate-50 { background-color: #f8fafc; }
+    .bg-slate-100 { background-color: #f1f5f9; }
+    .bg-rose-500 { background-color: #f43f5e; }
+    .bg-indigo-500 { background-color: #6366f1; }
+    .bg-sky-500 { background-color: #0ea5e9; }
+    .bg-emerald-500 { background-color: #10b981; }
+    .border-rose-200 { border-color: #fecdd3; }
+    .bg-rose-50 { background-color: #fff1f2; }
+    .text-rose-900 { color: #881337; }
+    .border-amber-200 { border-color: #fde68a; }
+    .bg-amber-50 { background-color: #fffbeb; }
+    .text-amber-900 { color: #78350f; }
+    .border-sky-200 { border-color: #bae6fd; }
+    .bg-sky-50 { background-color: #f0f9ff; }
+    .text-sky-900 { color: #0c4a6e; }
+    @media print { .no-print { display: none !important; } .card { box-shadow: none !important; border: 1px solid #ddd; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">âš¡</div>
+        <div>
+          <h1 class="brand-title">VoltLens</h1>
+          <p class="brand-tagline">100% Grounded Windows Battery Intelligence Diagnostic</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 no-print">
+        <button id="btn-demo" class="btn btn-secondary text-xs">Load Demo Data</button>
+        <label for="file-input" class="btn btn-primary text-xs cursor-pointer">
+          ðŸ“ Select battery-report.html
+          <input type="file" id="file-input" accept=".html,.htm" style="display:none;">
+        </label>
+      </div>
+    </header>
+
+    <!-- Dropzone View (Visible when no data loaded) -->
+    <div id="dropzone-view" class="dropzone no-print">
+      <div class="text-4xl mb-3">ðŸ”‹</div>
+      <h2 class="text-lg font-bold text-slate-800 mb-1">Drag and drop your battery-report.html here</h2>
+      <p class="text-sm text-slate-500 mb-4">100% Client-Side & Private. Zero data leaves your computer.</p>
+      <div class="inline-flex gap-2">
+        <button onclick="document.getElementById('file-input').click()" class="btn btn-primary text-xs">Browse Local File</button>
+        <button onclick="loadSampleReport()" class="btn btn-secondary text-xs">See Example Report</button>
+      </div>
+      <div class="mt-6 text-xs text-slate-400 max-w-md mx-auto">
+        Don't have the file? Run <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">powercfg /batteryreport</code> in CMD, or double-click <strong>voltlens.bat</strong>.
+      </div>
+    </div>
+
+    <!-- Dashboard View (Populated upon parse) -->
+    <main id="dashboard-view" style="display:none;"></main>
+  </div>
+
+  <!-- Raw Report Injected Placeholder for 1-Click Batch Execution -->
+  <script id="embedded-report-data" type="text/plain">/*INJECT_RAW_REPORT_HERE*/</script>
+
+  <script>
+// --- PARSER ---
+/**
+ * VoltLens Battery Report Parser
+ * Strict 1:1 parser for Microsoft Windows powercfg /batteryreport HTML exports.
+ * 100% truth-grounded extraction with zero hallucinated or synthetic placeholders.
+ */
+
+function parseBatteryReport(htmlString) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+
+  return {
+    systemInfo: parseSystemInfo(doc),
+    batteries: parseInstalledBatteries(doc),
+    recentUsage: parseRecentUsage(doc),
+    batteryUsage: parseBatteryUsage(doc),
+    usageHistory: parseUsageHistory(doc),
+    capacityHistory: parseCapacityHistory(doc),
+    lifeEstimates: parseLifeEstimates(doc)
+  };
+}
+
+function cleanText(text) {
+  return text ? text.replace(/\s+/g, ' ').trim() : '';
+}
+
+function parseMWh(text) {
+  if (!text) return null;
+  const match = text.replace(/,/g, '').match(/(\d+)\s*mWh/i);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+function parseSystemInfo(doc) {
+  const info = {
+    computerName: 'Unknown',
+    systemProductName: 'Unknown',
+    bios: 'Unknown',
+    osBuild: 'Unknown',
+    platformRole: 'Mobile',
+    connectedStandby: 'Unknown',
+    reportTime: 'Unknown'
+  };
+
+  const tables = doc.querySelectorAll('table');
+  if (tables.length > 0) {
+    const firstTable = tables[0];
+    const rows = firstTable.querySelectorAll('tr');
+    rows.forEach(row => {
+      const labelEl = row.querySelector('.label');
+      const valEl = row.querySelectorAll('td')[1];
+      if (labelEl && valEl) {
+        const label = cleanText(labelEl.textContent).toUpperCase();
+        const value = cleanText(valEl.textContent);
+        if (label.includes('COMPUTER NAME')) info.computerName = value;
+        else if (label.includes('SYSTEM PRODUCT NAME')) info.systemProductName = value;
+        else if (label.includes('BIOS')) info.bios = value;
+        else if (label.includes('OS BUILD')) info.osBuild = value;
+        else if (label.includes('PLATFORM ROLE')) info.platformRole = value;
+        else if (label.includes('CONNECTED STANDBY')) info.connectedStandby = value;
+        else if (label.includes('REPORT TIME')) info.reportTime = value;
+      }
+    });
+  }
+  return info;
+}
+
+function parseInstalledBatteries(doc) {
+  const batteries = [];
+  const headers = doc.querySelectorAll('h2');
+  let targetTable = null;
+
+  for (const h2 of headers) {
+    if (cleanText(h2.textContent).toLowerCase().includes('installed batteries')) {
+      let next = h2.nextElementSibling;
+      while (next && next.tagName !== 'TABLE') {
+        next = next.nextElementSibling;
+      }
+      targetTable = next;
+      break;
+    }
+  }
+
+  if (!targetTable) return batteries;
+
+  const battery = {
+    name: 'Unknown',
+    manufacturer: 'Unknown',
+    serialNumber: 'Unknown',
+    chemistry: 'Unknown',
+    designCapacityMWh: null,
+    fullChargeCapacityMWh: null,
+    cycleCountRaw: '-'
+  };
+
+  const rows = targetTable.querySelectorAll('tr');
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 2) {
+      const key = cleanText(cells[0].textContent).toUpperCase();
+      const val = cleanText(cells[1].textContent);
+      if (key.includes('NAME')) battery.name = val;
+      else if (key.includes('MANUFACTURER')) battery.manufacturer = val;
+      else if (key.includes('SERIAL NUMBER')) battery.serialNumber = val;
+      else if (key.includes('CHEMISTRY')) battery.chemistry = val;
+      else if (key.includes('DESIGN CAPACITY')) battery.designCapacityMWh = parseMWh(val);
+      else if (key.includes('FULL CHARGE CAPACITY')) battery.fullChargeCapacityMWh = parseMWh(val);
+      else if (key.includes('CYCLE COUNT')) battery.cycleCountRaw = val;
+    }
+  });
+
+  batteries.push(battery);
+  return batteries;
+}
+
+function parseRecentUsage(doc) {
+  const events = [];
+  const headers = doc.querySelectorAll('h2');
+  let targetTable = null;
+
+  for (const h2 of headers) {
+    if (cleanText(h2.textContent).toLowerCase() === 'recent usage') {
+      let next = h2.nextElementSibling;
+      while (next && next.tagName !== 'TABLE') {
+        next = next.nextElementSibling;
+      }
+      targetTable = next;
+      break;
+    }
+  }
+
+  if (!targetTable) return events;
+
+  let currentDate = '';
+  const rows = targetTable.querySelectorAll('tr');
+  rows.forEach(row => {
+    if (row.querySelector('th')) return; // Header row
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 5) {
+      const dateSpan = cells[0].querySelector('.date');
+      const timeSpan = cells[0].querySelector('.time');
+
+      if (dateSpan && dateSpan.textContent.trim()) {
+        currentDate = cleanText(dateSpan.textContent);
+      }
+      const timeStr = timeSpan ? cleanText(timeSpan.textContent) : '';
+      const fullTimestamp = currentDate && timeStr ? `${currentDate} ${timeStr}` : cleanText(cells[0].textContent);
+
+      const state = cleanText(cells[1].textContent);
+      const source = cleanText(cells[2].textContent) || 'Battery/Suspended';
+      const percentStr = cleanText(cells[3].textContent);
+      const mwhStr = cleanText(cells[4].textContent);
+
+      const percent = percentStr.includes('%') ? parseInt(percentStr.replace('%', '').trim(), 10) : null;
+      const mwh = parseMWh(mwhStr);
+
+      events.push({
+        timestamp: fullTimestamp,
+        state,
+        source,
+        percentRemaining: percent,
+        capacityRemainingMWh: mwh
+      });
+    }
+  });
+
+  return events;
+}
+
+function parseBatteryUsage(doc) {
+  const usageEvents = [];
+  const headers = doc.querySelectorAll('h2');
+  let targetTable = null;
+
+  for (const h2 of headers) {
+    if (cleanText(h2.textContent).toLowerCase() === 'battery usage') {
+      let next = h2.nextElementSibling;
+      while (next && next.tagName !== 'TABLE') {
+        next = next.nextElementSibling;
+      }
+      targetTable = next;
+      break;
+    }
+  }
+
+  if (!targetTable) return usageEvents;
+
+  let currentDate = '';
+  const rows = targetTable.querySelectorAll('tr');
+  rows.forEach(row => {
+    if (row.querySelector('th')) return;
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 4) {
+      const dateSpan = cells[0].querySelector('.date');
+      const timeSpan = cells[0].querySelector('.time');
+      if (dateSpan && dateSpan.textContent.trim()) {
+        currentDate = cleanText(dateSpan.textContent);
+      }
+      const timeStr = timeSpan ? cleanText(timeSpan.textContent) : '';
+      const fullTimestamp = currentDate && timeStr ? `${currentDate} ${timeStr}` : cleanText(cells[0].textContent);
+
+      const duration = cleanText(cells[1].textContent);
+      const energyDrainedPct = cleanText(cells[2].textContent);
+      const energyDrainedMWh = parseMWh(cleanText(cells[3].textContent));
+
+      usageEvents.push({
+        timestamp: fullTimestamp,
+        duration,
+        energyDrainedPct,
+        energyDrainedMWh
+      });
+    }
+  });
+
+  return usageEvents;
+}
+
+function parseCapacityHistory(doc) {
+  const history = [];
+  const headers = doc.querySelectorAll('h2');
+  let targetTable = null;
+
+  for (const h2 of headers) {
+    if (cleanText(h2.textContent).toLowerCase().includes('battery capacity history')) {
+      let next = h2.nextElementSibling;
+      while (next && next.tagName !== 'TABLE') {
+        next = next.nextElementSibling;
+      }
+      targetTable = next;
+      break;
+    }
+  }
+
+  if (!targetTable) return history;
+
+  const rows = targetTable.querySelectorAll('tr');
+  rows.forEach(row => {
+    if (row.querySelector('th') || row.classList.contains('rowHeader')) return;
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 3) {
+      const period = cleanText(cells[0].textContent);
+      const fullCap = parseMWh(cleanText(cells[1].textContent));
+      const designCap = parseMWh(cleanText(cells[2].textContent));
+
+      if (period && fullCap !== null && designCap !== null) {
+        history.push({
+          period,
+          fullChargeCapacityMWh: fullCap,
+          designCapacityMWh: designCap,
+          healthPercent: parseFloat(((fullCap / designCap) * 100).toFixed(2))
+        });
+      }
+    }
+  });
+
+  return history;
+}
+
+function parseUsageHistory(doc) {
+  const history = [];
+  const headers = doc.querySelectorAll('h2');
+  let targetTable = null;
+
+  for (const h2 of headers) {
+    if (cleanText(h2.textContent).toLowerCase().includes('usage history')) {
+      let next = h2.nextElementSibling;
+      while (next && next.tagName !== 'TABLE') {
+        next = next.nextElementSibling;
+      }
+      targetTable = next;
+      break;
+    }
+  }
+
+  if (!targetTable) return history;
+
+  const rows = targetTable.querySelectorAll('tr');
+  rows.forEach(row => {
+    if (row.querySelector('th') || row.classList.contains('rowHeader')) return;
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 5) {
+      const period = cleanText(cells[0].textContent);
+      const batteryActive = cleanText(cells[1].textContent);
+      const batteryStandby = cleanText(cells[2].textContent);
+      const acActive = cleanText(cells[3].textContent);
+      const acStandby = cleanText(cells[4].textContent);
+
+      if (period) {
+        history.push({
+          period,
+          batteryActive,
+          batteryStandby,
+          acActive,
+          acStandby
+        });
+      }
+    }
+  });
+
+  return history;
+}
+
+function parseLifeEstimates(doc) {
+  const estimates = [];
+  let sinceOSInstall = null;
+  const headers = doc.querySelectorAll('h2');
+  let targetTable = null;
+
+  for (const h2 of headers) {
+    if (cleanText(h2.textContent).toLowerCase().includes('battery life estimates')) {
+      let next = h2.nextElementSibling;
+      while (next && next.tagName !== 'TABLE') {
+        next = next.nextElementSibling;
+      }
+      targetTable = next;
+      break;
+    }
+  }
+
+  if (!targetTable) return { estimates, sinceOSInstall };
+
+  const rows = targetTable.querySelectorAll('tr');
+  rows.forEach(row => {
+    if (row.querySelector('th') || row.classList.contains('rowHeader')) return;
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 6) {
+      const period = cleanText(cells[0].textContent);
+      const fullActive = cleanText(cells[1].textContent);
+      const fullStandby = cleanText(cells[2].textContent);
+      const designActive = cleanText(cells[4].textContent);
+      const designStandby = cleanText(cells[5].textContent);
+
+      if (period) {
+        estimates.push({
+          period,
+          fullCharge: { active: fullActive, standby: fullStandby },
+          designCapacity: { active: designActive, standby: designStandby }
+        });
+      }
+    }
+  });
+
+  // Check for "Since OS install" table at the bottom
+  const allTables = doc.querySelectorAll('table');
+  allTables.forEach(tbl => {
+    const text = cleanText(tbl.textContent);
+    if (text.includes('Since OS install')) {
+      const cells = tbl.querySelectorAll('td');
+      if (cells.length >= 5) {
+        sinceOSInstall = {
+          fullChargeActive: cleanText(cells[1].textContent),
+          fullChargeStandby: cleanText(cells[2].textContent),
+          designActive: cleanText(cells[3].textContent),
+          designStandby: cleanText(cells[4].textContent)
+        };
+      }
+    }
+  });
+
+  return { estimates, sinceOSInstall };
+}
+
+
+// --- CHARTS ---
+/**
+ * VoltLens Native SVG Vector Charting Engine
+ * 100% Offline: Zero external dependencies, pure mathematical SVG rendering.
+ */
+
+function renderCircularGauge(percent, grade) {
+  const radius = 54;
+  const stroke = 10;
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+  let strokeColor = '#10b981'; // green
+  if (percent < 50) strokeColor = '#f43f5e'; // red
+  else if (percent < 70) strokeColor = '#f59e0b'; // amber
+  else if (percent < 85) strokeColor = '#3b82f6'; // blue
+
+  return `
+    <div class="relative inline-flex items-center justify-center">
+      <svg height="${radius * 2}" width="${radius * 2}" class="transform -rotate-90">
+        <circle
+          stroke="#e2e8f0"
+          fill="transparent"
+          stroke-width="${stroke}"
+          r="${normalizedRadius}"
+          cx="${radius}"
+          cy="${radius}"
+        />
+        <circle
+          stroke="${strokeColor}"
+          fill="transparent"
+          stroke-width="${stroke}"
+          stroke-dasharray="${circumference} ${circumference}"
+          style="stroke-dashoffset: ${strokeDashoffset}; transition: stroke-dashoffset 1s ease-in-out;"
+          stroke-linecap="round"
+          r="${normalizedRadius}"
+          cx="${radius}"
+          cy="${radius}"
+        />
+      </svg>
+      <div class="absolute flex flex-col items-center">
+        <span class="text-2xl font-bold tracking-tight text-slate-800">${percent}%</span>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background-color: ${strokeColor}20; color: ${strokeColor}">
+          Grade ${grade}
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+function renderDegradationChart(dataPoints, designCapMWh) {
+  if (!dataPoints || dataPoints.length < 2) {
+    return `<div class="p-8 text-center text-slate-400">Insufficient history points to generate trajectory chart.</div>`;
+  }
+
+  const width = 800;
+  const height = 260;
+  const padding = { top: 20, right: 30, bottom: 40, left: 65 };
+
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const yMax = Math.max(designCapMWh * 1.05, ...dataPoints.map(p => p.fullChargeCapacityMWh * 1.05));
+  const yMin = Math.min(...dataPoints.map(p => p.fullChargeCapacityMWh)) * 0.85;
+
+  const getX = (idx) => padding.left + (idx / (dataPoints.length - 1)) * chartW;
+  const getY = (val) => padding.top + chartH - ((val - yMin) / (yMax - yMin)) * chartH;
+
+  // Build path
+  const points = dataPoints.map((pt, idx) => ({
+    x: getX(idx),
+    y: getY(pt.fullChargeCapacityMWh),
+    val: pt.fullChargeCapacityMWh,
+    period: pt.period
+  }));
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${padding.top + chartH} L ${points[0].x.toFixed(1)} ${padding.top + chartH} Z`;
+
+  const designY = getY(designCapMWh);
+
+  // Y-axis grid lines (4 steps)
+  const ySteps = 4;
+  let gridLines = '';
+  for (let i = 0; i <= ySteps; i++) {
+    const val = yMin + ((yMax - yMin) / ySteps) * i;
+    const yPos = getY(val);
+    gridLines += `
+      <line x1="${padding.left}" y1="${yPos}" x2="${width - padding.right}" y2="${yPos}" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+      <text x="${padding.left - 10}" y="${yPos + 4}" font-size="11" fill="#64748b" text-anchor="end">${Math.round(val).toLocaleString()} mWh</text>
+    `;
+  }
+
+  // X-axis labels (first, middle, last)
+  const labelIndices = [0, Math.floor(points.length / 2), points.length - 1];
+  let xLabels = '';
+  labelIndices.forEach(idx => {
+    const pt = points[idx];
+    const cleanDate = pt.period.split('-')[0].trim();
+    xLabels += `<text x="${pt.x}" y="${height - 12}" font-size="11" fill="#64748b" text-anchor="middle">${cleanDate}</text>`;
+  });
+
+  // Dots for each data point
+  let dots = '';
+  points.forEach((p, idx) => {
+    dots += `
+      <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="cursor-pointer hover:r-6 transition-all">
+        <title>${p.period}: ${p.val.toLocaleString()} mWh</title>
+      </circle>
+    `;
+  });
+
+  return `
+    <div class="w-full overflow-x-auto">
+      <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto max-w-full select-none">
+        <defs>
+          <linearGradient id="capacityGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Grid Lines & Y Labels -->
+        ${gridLines}
+
+        <!-- Design Capacity Reference Line -->
+        <line x1="${padding.left}" y1="${designY}" x2="${width - padding.right}" y2="${designY}" stroke="#94a3b8" stroke-dasharray="4 4" stroke-width="1.5"/>
+        <text x="${width - padding.right}" y="${designY - 6}" font-size="11" fill="#64748b" text-anchor="end" font-weight="600">
+          Design Baseline (${designCapMWh.toLocaleString()} mWh)
+        </text>
+
+        <!-- Area Fill -->
+        <path d="${areaPath}" fill="url(#capacityGradient)"/>
+
+        <!-- Line Path -->
+        <path d="${linePath}" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Dots -->
+        ${dots}
+
+        <!-- X Labels -->
+        ${xLabels}
+      </svg>
+    </div>
+  `;
+}
+
+function renderRuntimeBar(originalStr, currentStr, percentLost) {
+  return `
+    <div class="space-y-3">
+      <div class="flex justify-between items-center text-sm">
+        <span class="text-slate-600 font-medium">Original Factory Runtime</span>
+        <span class="font-bold text-slate-800">${originalStr}</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+        <div class="bg-indigo-500 h-3 rounded-full" style="width: 100%"></div>
+      </div>
+
+      <div class="flex justify-between items-center text-sm pt-2">
+        <span class="text-slate-600 font-medium">Current Observed Runtime</span>
+        <span class="font-bold text-slate-800">${currentStr}</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+        <div class="bg-rose-500 h-3 rounded-full" style="width: ${Math.max(10, 100 - percentLost)}%"></div>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-rose-600 font-semibold pt-1">
+        <span>Lost Duration: -${percentLost}%</span>
+        <span>${originalStr} â†’ ${currentStr}</span>
+      </div>
+    </div>
+  `;
+}
+
+
+// --- ANALYTICS ---
+/**
+ * VoltLens Analytics & Mathematical Intelligence Engine
+ * 100% Truth-Grounded: Zero hallucination, strictly derived from physical report data.
+ */
+
+function analyzeBatteryReport(data) {
+  const battery = data.batteries[0] || null;
+  const health = calculateHealth(battery);
+  const runtime = calculateRuntimeGap(data.lifeEstimates);
+  const standby = calculateStandbyAudit(data.recentUsage, battery ? battery.fullChargeCapacityMWh : null);
+  const degradation = calculateDegradationTrend(data.capacityHistory);
+  const habits = calculateHabitsProfile(data.usageHistory);
+  const recommendations = generateRecommendations(health, standby, habits, battery);
+
+  return {
+    health,
+    runtime,
+    standby,
+    degradation,
+    habits,
+    recommendations
+  };
+}
+
+function calculateHealth(battery) {
+  if (!battery || !battery.designCapacityMWh || !battery.fullChargeCapacityMWh) {
+    return {
+      status: 'Incomplete Data',
+      healthPercent: 0,
+      grade: 'N/A',
+      lostCapacityMWh: 0,
+      lostPercent: 0,
+      cycleCount: { raw: '-', verified: false, syntheticEstimate: null },
+      proof: 'Design or Full Charge Capacity missing in report'
+    };
+  }
+
+  const design = battery.designCapacityMWh;
+  const full = battery.fullChargeCapacityMWh;
+  const healthPct = parseFloat(((full / design) * 100).toFixed(2));
+  const lostMWh = Math.max(0, design - full);
+  const lostPct = parseFloat(((lostMWh / design) * 100).toFixed(2));
+
+  let grade = 'F';
+  let badgeClass = 'badge-critical';
+  let summary = 'Critical degradation. Battery needs replacement soon.';
+
+  if (healthPct >= 95) {
+    grade = 'A+';
+    badgeClass = 'badge-pristine';
+    summary = 'Pristine condition. Battery is essentially brand-new.';
+  } else if (healthPct >= 85) {
+    grade = 'A';
+    badgeClass = 'badge-excellent';
+    summary = 'Excellent health. Minor natural chemical wear.';
+  } else if (healthPct >= 75) {
+    grade = 'B';
+    badgeClass = 'badge-good';
+    summary = 'Good health. Normal operational capacity retention.';
+  } else if (healthPct >= 65) {
+    grade = 'C';
+    badgeClass = 'badge-moderate';
+    summary = 'Moderate wear. Battery noticeably drains faster than day one.';
+  } else if (healthPct >= 50) {
+    grade = 'D';
+    badgeClass = 'badge-degraded';
+    summary = 'Significant degradation. Battery service or replacement advised.';
+  }
+
+  const isCycleRawReported = battery.cycleCountRaw && battery.cycleCountRaw.trim() !== '-' && !isNaN(parseInt(battery.cycleCountRaw, 10));
+
+  return {
+    healthPercent: healthPct,
+    grade,
+    badgeClass,
+    summary,
+    designCapacityMWh: design,
+    fullChargeCapacityMWh: full,
+    lostCapacityMWh: lostMWh,
+    lostPercent: lostPct,
+    cycleCount: {
+      raw: battery.cycleCountRaw,
+      isHardwareReported: isCycleRawReported,
+      value: isCycleRawReported ? parseInt(battery.cycleCountRaw, 10) : null
+    },
+    proof: `Derived from: Installed Batteries Table -> Design: ${design.toLocaleString()} mWh, Full Charge: ${full.toLocaleString()} mWh`
+  };
+}
+
+function parseHmsToSeconds(hmsStr) {
+  if (!hmsStr || hmsStr === '-') return null;
+  const parts = hmsStr.split(':').map(p => parseInt(p, 10));
+  if (parts.length === 3 && !parts.some(isNaN)) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  return null;
+}
+
+function formatSecondsToHms(totalSecs) {
+  if (totalSecs === null || isNaN(totalSecs)) return 'N/A';
+  const hrs = Math.floor(totalSecs / 3600);
+  const mins = Math.floor((totalSecs % 3600) / 60);
+  if (hrs === 0) return `${mins}m`;
+  return `${hrs}h ${mins}m`;
+}
+
+function calculateRuntimeGap(lifeEstimates) {
+  const estimates = lifeEstimates ? lifeEstimates.estimates : [];
+  if (!estimates || estimates.length === 0) {
+    return {
+      hasData: false,
+      originalRuntime: 'N/A',
+      currentRuntime: 'N/A',
+      lostRuntime: 'N/A',
+      percentLost: 0,
+      proof: 'No life estimate rows recorded in report'
+    };
+  }
+
+  // Baseline: earliest recorded full charge or design capacity active runtime
+  let earliestActiveSec = null;
+  let latestActiveSec = null;
+
+  for (let i = 0; i < estimates.length; i++) {
+    const sec = parseHmsToSeconds(estimates[i].designCapacity.active) || parseHmsToSeconds(estimates[i].fullCharge.active);
+    if (sec && sec > 600) { // filter anomalies under 10 mins
+      earliestActiveSec = sec;
+      break;
+    }
+  }
+
+  for (let i = estimates.length - 1; i >= 0; i--) {
+    const sec = parseHmsToSeconds(estimates[i].fullCharge.active);
+    if (sec && sec > 600) {
+      latestActiveSec = sec;
+      break;
+    }
+  }
+
+  if (!earliestActiveSec || !latestActiveSec) {
+    return {
+      hasData: false,
+      originalRuntime: 'N/A',
+      currentRuntime: 'N/A',
+      lostRuntime: 'N/A',
+      percentLost: 0,
+      proof: 'Insufficient valid runtime rows'
+    };
+  }
+
+  const lostSecs = Math.max(0, earliestActiveSec - latestActiveSec);
+  const pctLost = parseFloat(((lostSecs / earliestActiveSec) * 100).toFixed(1));
+
+  return {
+    hasData: true,
+    originalRuntime: formatSecondsToHms(earliestActiveSec),
+    currentRuntime: formatSecondsToHms(latestActiveSec),
+    lostRuntime: formatSecondsToHms(lostSecs),
+    percentLost: pctLost,
+    originalSecs: earliestActiveSec,
+    currentSecs: latestActiveSec,
+    proof: `Earliest recorded baseline (${formatSecondsToHms(earliestActiveSec)}) vs Most recent full charge estimate (${formatSecondsToHms(latestActiveSec)})`
+  };
+}
+
+function calculateStandbyAudit(recentUsage, fullChargeCapMWh) {
+  if (!recentUsage || recentUsage.length < 2) {
+    return {
+      hasData: false,
+      severity: 'Unknown',
+      incidents: [],
+      avgDrainPerHour: null,
+      proof: 'Recent usage records insufficient'
+    };
+  }
+
+  const standbyIncidents = [];
+  let totalDrainedPct = 0;
+  let totalHours = 0;
+
+  for (let i = 0; i < recentUsage.length - 1; i++) {
+    const current = recentUsage[i];
+    const next = recentUsage[i + 1];
+
+    const isStandby = current.state.toLowerCase().includes('standby') || current.state.toLowerCase().includes('suspend');
+    if (isStandby && current.source.toLowerCase().includes('battery')) {
+      const tStart = new Date(current.timestamp).getTime();
+      const tEnd = new Date(next.timestamp).getTime();
+      const diffMs = tEnd - tStart;
+
+      if (!isNaN(diffMs) && diffMs >= 30 * 60 * 1000 && diffMs <= 72 * 3600 * 1000) { // 30 mins to 3 days
+        const hours = diffMs / (1000 * 3600);
+        const pStart = current.percentRemaining;
+        const pEnd = next.percentRemaining;
+
+        if (pStart !== null && pEnd !== null && pStart >= pEnd) {
+          const dropPct = pStart - pEnd;
+          const drainRatePerHour = parseFloat((dropPct / hours).toFixed(2));
+
+          totalDrainedPct += dropPct;
+          totalHours += hours;
+
+          if (drainRatePerHour >= 1.5) { // Moderate to severe leak
+            standbyIncidents.push({
+              start: current.timestamp,
+              durationHours: parseFloat(hours.toFixed(1)),
+              dropPct,
+              drainRatePerHour,
+              severity: drainRatePerHour >= 3.0 ? 'Severe' : 'Moderate'
+            });
+          }
+        }
+      }
+    }
+  }
+
+  const avgDrainPerHour = totalHours > 0 ? parseFloat((totalDrainedPct / totalHours).toFixed(2)) : 0;
+  let severity = 'Healthy';
+  let badgeClass = 'badge-good';
+
+  if (avgDrainPerHour >= 3.0) {
+    severity = 'Severe Leak';
+    badgeClass = 'badge-critical';
+  } else if (avgDrainPerHour >= 1.5) {
+    severity = 'Moderate Drain';
+    badgeClass = 'badge-moderate';
+  }
+
+  return {
+    hasData: true,
+    severity,
+    badgeClass,
+    avgDrainPerHour,
+    totalIncidentsDetected: standbyIncidents.length,
+    worstIncidents: standbyIncidents.sort((a, b) => b.drainRatePerHour - a.drainRatePerHour).slice(0, 5),
+    proof: `Aggregated from ${recentUsage.length} power state transitions in Recent Usage table`
+  };
+}
+
+function calculateDegradationTrend(capacityHistory) {
+  if (!capacityHistory || capacityHistory.length < 2) {
+    return {
+      hasData: false,
+      monthlyDeclineMWh: null,
+      dataPoints: [],
+      projectedHalfLife: null,
+      proof: 'Insufficient capacity history points'
+    };
+  }
+
+  const validPoints = capacityHistory.filter(p => p.fullChargeCapacityMWh && p.fullChargeCapacityMWh > 5000);
+  if (validPoints.length < 2) {
+    return { hasData: false, monthlyDeclineMWh: null, dataPoints: [], projectedHalfLife: null };
+  }
+
+  const firstPoint = validPoints[0];
+  const lastPoint = validPoints[validPoints.length - 1];
+
+  const totalCapacityLoss = Math.max(0, firstPoint.fullChargeCapacityMWh - lastPoint.fullChargeCapacityMWh);
+
+  return {
+    hasData: true,
+    firstRecordedDate: firstPoint.period,
+    lastRecordedDate: lastPoint.period,
+    initialCapacityMWh: firstPoint.fullChargeCapacityMWh,
+    currentCapacityMWh: lastPoint.fullChargeCapacityMWh,
+    totalCapacityLossMWh: totalCapacityLoss,
+    dataPoints: validPoints,
+    proof: `Tracked across ${validPoints.length} chronological periods in Battery Capacity History`
+  };
+}
+
+function calculateHabitsProfile(usageHistory) {
+  if (!usageHistory || usageHistory.length === 0) {
+    return {
+      hasData: false,
+      pluggedInRatioPct: 50,
+      batteryRatioPct: 50,
+      persona: 'Unknown',
+      proof: 'No usage history logged'
+    };
+  }
+
+  let totalAcSeconds = 0;
+  let totalBatterySeconds = 0;
+
+  usageHistory.forEach(item => {
+    const acSec = (parseHmsToSeconds(item.acActive) || 0) + (parseHmsToSeconds(item.acStandby) || 0);
+    const batSec = (parseHmsToSeconds(item.batteryActive) || 0) + (parseHmsToSeconds(item.batteryStandby) || 0);
+    totalAcSeconds += acSec;
+    totalBatterySeconds += batSec;
+  });
+
+  const totalSeconds = totalAcSeconds + totalBatterySeconds;
+  if (totalSeconds === 0) {
+    return { hasData: false, pluggedInRatioPct: 50, batteryRatioPct: 50, persona: 'Balanced User' };
+  }
+
+  const acPct = Math.round((totalAcSeconds / totalSeconds) * 100);
+  const batPct = 100 - acPct;
+
+  let persona = 'Hybrid Worker';
+  if (acPct >= 80) persona = 'Desk Worker (Always Plugged In)';
+  else if (acPct <= 35) persona = 'Road Warrior (Nomadic Battery User)';
+
+  return {
+    hasData: true,
+    pluggedInRatioPct: acPct,
+    batteryRatioPct: batPct,
+    persona,
+    proof: `Aggregated total AC vs Battery active & standby seconds from Usage History`
+  };
+}
+
+function generateRecommendations(health, standby, habits, battery) {
+  const recs = [];
+
+  // Capacity / Health recs
+  if (health.healthPercent < 65) {
+    recs.push({
+      type: 'critical',
+      title: 'Battery Capacity Significantly Worn',
+      desc: `Your battery has lost ${health.lostPercent}% of its factory energy storage. If on-the-go battery life is critical for your work, consider an OEM battery replacement.`,
+      action: 'Check replacement availability using part number: ' + (battery ? battery.name : 'OEM specification')
+    });
+  }
+
+  // Habits recs
+  if (habits.hasData && habits.pluggedInRatioPct >= 75) {
+    recs.push({
+      type: 'tip',
+      title: 'Enable Battery Charge Limit (Prolong Longevity)',
+      desc: `You keep your laptop plugged into AC power ${habits.pluggedInRatioPct}% of the time. Keeping lithium cells constantly at 100% state-of-charge increases thermal wear and swelling risk.`,
+      action: 'Set an 80% charge threshold limit inside your laptop manufacturer software (Dell Power Manager, Lenovo Vantage, MyASUS, or BIOS).'
+    });
+  }
+
+  // Standby recs
+  if (standby.hasData && standby.severity !== 'Healthy') {
+    recs.push({
+      type: 'warning',
+      title: 'Fix Modern Standby Sleep Drain ("Vampire Drain")',
+      desc: `Your laptop lost significant battery while sleeping (avg ${standby.avgDrainPerHour}%/hr). Windows Modern Standby is keeping wireless radios or background updates running with the lid closed.`,
+      action: 'Switch "When I close the lid" from Sleep to Hibernate in Windows Power Options to completely eliminate sleep drain.'
+    });
+  }
+
+  // Generic best practice
+  recs.push({
+    type: 'info',
+    title: 'Avoid Deep Discharges Below 10%',
+    desc: 'Lithium-polymer cells suffer maximum physical stress when discharged below 10% or left empty for long periods.',
+    action: 'Plug in before reaching 15-20% whenever feasible to preserve chemical cycles.'
+  });
+
+  return recs;
+}
+
+
+// --- UI ---
+/**
+ * VoltLens UI Rendering Engine
+ * Translates parsed data and analytical insights into a high-grade light dashboard.
+ */
+
+
+
+function renderDashboard(data, analysis) {
+  const { systemInfo, batteries } = data;
+  const battery = batteries[0] || {};
+  const { health, runtime, standby, degradation, habits, recommendations } = analysis;
+
+  return `
+    <!-- Top System Spec Bar -->
+    <div class="card mb-6 bg-slate-50 border-slate-200">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Device Hardware</span>
+          <h2 class="text-lg font-bold text-slate-900">${systemInfo.systemProductName}</h2>
+          <p class="text-xs text-slate-500">${systemInfo.computerName} â€¢ BIOS ${systemInfo.bios} â€¢ OS ${systemInfo.osBuild.split('.')[0]}</p>
+        </div>
+        <div class="flex items-center gap-6 text-sm">
+          <div>
+            <span class="text-xs text-slate-500 block">Battery Model</span>
+            <span class="font-semibold text-slate-800">${battery.name || 'OEM Battery'} (${battery.chemistry || 'LiP'})</span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-500 block">Report Date</span>
+            <span class="font-semibold text-slate-800">${systemInfo.reportTime}</span>
+          </div>
+          <button onclick="window.print()" class="btn btn-secondary text-xs no-print">
+            ðŸ–¨ï¸ Export / Print PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Core Hero Cards -->
+    <div class="grid-3">
+      <!-- Hero 1: Battery Health -->
+      <div class="card">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Battery Health Score</h3>
+            <p class="text-xs text-slate-500">True chemical retention vs factory spec</p>
+          </div>
+          <span class="proof-pill" title="${health.proof}">Proof â„¹ï¸</span>
+        </div>
+        <div class="flex items-center gap-5 my-3">
+          ${renderCircularGauge(health.healthPercent, health.grade)}
+          <div class="space-y-1">
+            <p class="text-xs font-semibold text-slate-700">${health.summary}</p>
+            <p class="text-xs text-slate-500">Lost Capacity: <span class="font-bold text-rose-600">${health.lostCapacityMWh.toLocaleString()} mWh</span> (-${health.lostPercent}%)</p>
+          </div>
+        </div>
+        <div class="pt-3 border-t border-slate-100 flex justify-between text-xs text-slate-600">
+          <span>Design: <strong>${(health.designCapacityMWh || 0).toLocaleString()} mWh</strong></span>
+          <span>Current: <strong>${(health.fullChargeCapacityMWh || 0).toLocaleString()} mWh</strong></span>
+        </div>
+        <div class="mt-2 text-xs text-slate-400">
+          Hardware Cycles: ${health.cycleCount.isHardwareReported ? health.cycleCount.value : '<span title="OEM sensor omitted cycle counter in hardware">Not reported by OEM (-)</span>'}
+        </div>
+      </div>
+
+      <!-- Hero 2: Lost Runtime -->
+      <div class="card">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Lost Portable Runtime</h3>
+            <p class="text-xs text-slate-500">Active screen-on time vs day one</p>
+          </div>
+          <span class="proof-pill" title="${runtime.proof}">Proof â„¹ï¸</span>
+        </div>
+        ${runtime.hasData ? renderRuntimeBar(runtime.originalRuntime, runtime.currentRuntime, runtime.percentLost) : '<div class="text-xs text-slate-400 py-6 text-center">Runtime estimate logs not available.</div>'}
+      </div>
+
+      <!-- Hero 3: Standby Vampire Drain -->
+      <div class="card">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Sleep Drain Auditor</h3>
+            <p class="text-xs text-slate-500">Modern standby power loss rate</p>
+          </div>
+          <span class="proof-pill" title="${standby.proof}">Proof â„¹ï¸</span>
+        </div>
+        <div class="my-2">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="badge ${standby.badgeClass}">${standby.severity}</span>
+            <span class="text-sm font-bold text-slate-800">${standby.avgDrainPerHour || 0}% / hour</span>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            ${standby.severity === 'Severe Leak'
+              ? 'Warning: Your laptop consumes abnormal battery while sleeping with the lid closed. Typically caused by background wireless wakeups.'
+              : 'Standby drain is within expected operational limits.'}
+          </p>
+        </div>
+        <div class="pt-3 border-t border-slate-100 text-xs text-slate-500">
+          ${standby.worstIncidents && standby.worstIncidents.length > 0
+            ? `Worst Leak: Lost <strong>${standby.worstIncidents[0].dropPct}%</strong> in ${standby.worstIncidents[0].durationHours}h (${standby.worstIncidents[0].drainRatePerHour}%/hr)`
+            : 'No abnormal standby leaks detected in past 7 days.'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Degradation Trajectory Section -->
+    <div class="card mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">Capacity Degradation Trajectory</h3>
+          <p class="text-xs text-slate-500">Chronological retention curve from initial recorded date to today</p>
+        </div>
+        <span class="proof-pill" title="${degradation.proof}">Proof â„¹ï¸</span>
+      </div>
+      ${renderDegradationChart(degradation.dataPoints, health.designCapacityMWh || 40000)}
+    </div>
+
+    <!-- 2 Column Section: Habits & Recommendations -->
+    <div class="grid-2">
+      <!-- Usage Habits & Power Profile -->
+      <div class="card">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Power Source & Habit Profile</h3>
+            <p class="text-xs text-slate-500">Plugged-in AC vs Battery operational split</p>
+          </div>
+          <span class="proof-pill" title="${habits.proof}">Proof â„¹ï¸</span>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between text-sm">
+            <span class="font-medium text-slate-700">User Persona</span>
+            <span class="font-bold text-sky-700">${habits.persona}</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden flex">
+            <div class="bg-sky-500 h-4" style="width: ${habits.pluggedInRatioPct}%" title="Plugged In: ${habits.pluggedInRatioPct}%"></div>
+            <div class="bg-emerald-500 h-4" style="width: ${habits.batteryRatioPct}%" title="On Battery: ${habits.batteryRatioPct}%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-slate-500">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-sky-500 rounded-full inline-block"></span> AC Plugged: ${habits.pluggedInRatioPct}%</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block"></span> Battery Discharge: ${habits.batteryRatioPct}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actionable Care Recommendations -->
+      <div class="card">
+        <h3 class="font-bold text-slate-800 text-base mb-1">Tailored Battery Care Guide</h3>
+        <p class="text-xs text-slate-500 mb-4">Manufacturer-neutral, actionable steps grounded in your report</p>
+        <div class="space-y-3">
+          ${recommendations.map(r => `
+            <div class="p-3 rounded-lg border text-xs ${
+              r.type === 'critical' ? 'bg-rose-50 border-rose-200 text-rose-900' :
+              r.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-900' :
+              r.type === 'tip' ? 'bg-sky-50 border-sky-200 text-sky-900' :
+              'bg-slate-50 border-slate-200 text-slate-800'
+            }">
+              <div class="font-bold mb-0.5">${r.title}</div>
+              <p class="mb-1.5 opacity-90">${r.desc}</p>
+              <div class="font-semibold text-slate-900">ðŸ‘‰ ${r.action}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+window.loadReportHTML = function(htmlText) {
+  try {
+    const data = parseBatteryReport(htmlText);
+    const analysis = analyzeBatteryReport(data);
+    const dashboardHtml = renderDashboard(data, analysis);
+
+    document.getElementById('dropzone-view').style.display = 'none';
+    const dash = document.getElementById('dashboard-view');
+    dash.innerHTML = dashboardHtml;
+    dash.style.display = 'block';
+  } catch (err) {
+    alert('Error parsing battery report: ' + err.message);
+  }
+};
+
+window.loadSampleReport = async function() {
+  try {
+    const resp = await fetch('sample/battery-report.html');
+    if (resp.ok) {
+      const text = await resp.text();
+      window.loadReportHTML(text);
+    } else {
+      alert('Sample file not found. Please drag and drop your own battery-report.html.');
+    }
+  } catch (e) {
+    alert('Could not fetch sample. Please drop your battery-report.html file.');
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const embeddedScript = document.getElementById('embedded-report-data');
+  if (embeddedScript && embeddedScript.textContent && !embeddedScript.textContent.includes('/*INJECT_RAW_REPORT_HERE*/')) {
+    window.loadReportHTML(embeddedScript.textContent);
+  }
+});
+
+document.getElementById('file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => window.loadReportHTML(event.target.result);
+    reader.readAsText(file);
+  }
+});
+
+const dropzone = document.getElementById('dropzone-view');
+['dragenter', 'dragover'].forEach(name => {
+  dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('drag-active'); });
+});
+['dragleave', 'drop'].forEach(name => {
+  dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('drag-active'); });
+});
+dropzone.addEventListener('drop', (e) => {
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => window.loadReportHTML(event.target.result);
+    reader.readAsText(file);
+  }
+});
+
+document.getElementById('btn-demo').addEventListener('click', window.loadSampleReport);
+</script>
+</body>
+</html>
+

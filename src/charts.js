@@ -1,0 +1,173 @@
+/**
+ * VoltLens Native SVG Vector Charting Engine
+ * 100% Offline: Zero external dependencies, pure mathematical SVG rendering.
+ */
+
+export function renderCircularGauge(percent, grade) {
+  const radius = 54;
+  const stroke = 10;
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+  let strokeColor = '#10b981'; // green
+  if (percent < 50) strokeColor = '#f43f5e'; // red
+  else if (percent < 70) strokeColor = '#f59e0b'; // amber
+  else if (percent < 85) strokeColor = '#3b82f6'; // blue
+
+  return `
+    <div class="relative inline-flex items-center justify-center">
+      <svg height="${radius * 2}" width="${radius * 2}" class="transform -rotate-90">
+        <circle
+          stroke="#e2e8f0"
+          fill="transparent"
+          stroke-width="${stroke}"
+          r="${normalizedRadius}"
+          cx="${radius}"
+          cy="${radius}"
+        />
+        <circle
+          stroke="${strokeColor}"
+          fill="transparent"
+          stroke-width="${stroke}"
+          stroke-dasharray="${circumference} ${circumference}"
+          style="stroke-dashoffset: ${strokeDashoffset}; transition: stroke-dashoffset 1s ease-in-out;"
+          stroke-linecap="round"
+          r="${normalizedRadius}"
+          cx="${radius}"
+          cy="${radius}"
+        />
+      </svg>
+      <div class="absolute flex flex-col items-center">
+        <span class="text-2xl font-bold tracking-tight text-slate-800">${percent}%</span>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background-color: ${strokeColor}20; color: ${strokeColor}">
+          Grade ${grade}
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+export function renderDegradationChart(dataPoints, designCapMWh) {
+  if (!dataPoints || dataPoints.length < 2) {
+    return `<div class="p-8 text-center text-slate-400">Insufficient history points to generate trajectory chart.</div>`;
+  }
+
+  const width = 800;
+  const height = 260;
+  const padding = { top: 20, right: 30, bottom: 40, left: 65 };
+
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const yMax = Math.max(designCapMWh * 1.05, ...dataPoints.map(p => p.fullChargeCapacityMWh * 1.05));
+  const yMin = Math.min(...dataPoints.map(p => p.fullChargeCapacityMWh)) * 0.85;
+
+  const getX = (idx) => padding.left + (idx / (dataPoints.length - 1)) * chartW;
+  const getY = (val) => padding.top + chartH - ((val - yMin) / (yMax - yMin)) * chartH;
+
+  // Build path
+  const points = dataPoints.map((pt, idx) => ({
+    x: getX(idx),
+    y: getY(pt.fullChargeCapacityMWh),
+    val: pt.fullChargeCapacityMWh,
+    period: pt.period
+  }));
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${padding.top + chartH} L ${points[0].x.toFixed(1)} ${padding.top + chartH} Z`;
+
+  const designY = getY(designCapMWh);
+
+  // Y-axis grid lines (4 steps)
+  const ySteps = 4;
+  let gridLines = '';
+  for (let i = 0; i <= ySteps; i++) {
+    const val = yMin + ((yMax - yMin) / ySteps) * i;
+    const yPos = getY(val);
+    gridLines += `
+      <line x1="${padding.left}" y1="${yPos}" x2="${width - padding.right}" y2="${yPos}" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+      <text x="${padding.left - 10}" y="${yPos + 4}" font-size="11" fill="#64748b" text-anchor="end">${Math.round(val).toLocaleString()} mWh</text>
+    `;
+  }
+
+  // X-axis labels (first, middle, last)
+  const labelIndices = [0, Math.floor(points.length / 2), points.length - 1];
+  let xLabels = '';
+  labelIndices.forEach(idx => {
+    const pt = points[idx];
+    const cleanDate = pt.period.split('-')[0].trim();
+    xLabels += `<text x="${pt.x}" y="${height - 12}" font-size="11" fill="#64748b" text-anchor="middle">${cleanDate}</text>`;
+  });
+
+  // Dots for each data point
+  let dots = '';
+  points.forEach((p, idx) => {
+    dots += `
+      <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="cursor-pointer hover:r-6 transition-all">
+        <title>${p.period}: ${p.val.toLocaleString()} mWh</title>
+      </circle>
+    `;
+  });
+
+  return `
+    <div class="w-full overflow-x-auto">
+      <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto max-w-full select-none">
+        <defs>
+          <linearGradient id="capacityGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Grid Lines & Y Labels -->
+        ${gridLines}
+
+        <!-- Design Capacity Reference Line -->
+        <line x1="${padding.left}" y1="${designY}" x2="${width - padding.right}" y2="${designY}" stroke="#94a3b8" stroke-dasharray="4 4" stroke-width="1.5"/>
+        <text x="${width - padding.right}" y="${designY - 6}" font-size="11" fill="#64748b" text-anchor="end" font-weight="600">
+          Design Baseline (${designCapMWh.toLocaleString()} mWh)
+        </text>
+
+        <!-- Area Fill -->
+        <path d="${areaPath}" fill="url(#capacityGradient)"/>
+
+        <!-- Line Path -->
+        <path d="${linePath}" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Dots -->
+        ${dots}
+
+        <!-- X Labels -->
+        ${xLabels}
+      </svg>
+    </div>
+  `;
+}
+
+export function renderRuntimeBar(originalStr, currentStr, percentLost) {
+  return `
+    <div class="space-y-3">
+      <div class="flex justify-between items-center text-sm">
+        <span class="text-slate-600 font-medium">Original Factory Runtime</span>
+        <span class="font-bold text-slate-800">${originalStr}</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+        <div class="bg-indigo-500 h-3 rounded-full" style="width: 100%"></div>
+      </div>
+
+      <div class="flex justify-between items-center text-sm pt-2">
+        <span class="text-slate-600 font-medium">Current Observed Runtime</span>
+        <span class="font-bold text-slate-800">${currentStr}</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+        <div class="bg-rose-500 h-3 rounded-full" style="width: ${Math.max(10, 100 - percentLost)}%"></div>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-rose-600 font-semibold pt-1">
+        <span>Lost Duration: -${percentLost}%</span>
+        <span>${originalStr} → ${currentStr}</span>
+      </div>
+    </div>
+  `;
+}

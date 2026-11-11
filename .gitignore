@@ -1,0 +1,11 @@
+# Logs and temp files
+*.log
+*.tmp
+temp/
+
+# OS specific files
+Thumbs.db
+.DS_Store
+
+# User generated test outputs
+test-report.html

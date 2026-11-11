@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoltLens — Battery Intelligence Diagnostic</title>
+  <style>
+    /* VoltLens Embedded Light Theme */
+    :root {
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --bg-app: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-focus: #38bdf8;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-family); background-color: var(--bg-app); color: var(--text-main); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 1140px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #0284c7, #38bdf8); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; }
+    .brand-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+    .brand-tagline { font-size: 0.85rem; color: var(--text-muted); }
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+    .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-pristine { background: #dcfce7; color: #15803d; }
+    .badge-excellent { background: #e0f2fe; color: #0369a1; }
+    .badge-good { background: #f0fdf4; color: #166534; }
+    .badge-moderate { background: #fef3c7; color: #b45309; }
+    .badge-degraded { background: #fee2e2; color: #b91c1c; }
+    .badge-critical { background: #ffe4e6; color: #9f1239; }
+    .proof-pill { font-size: 0.7rem; color: var(--text-muted); background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.15rem 0.45rem; cursor: help; }
+    .dropzone { border: 2px dashed #cbd5e1; background: #ffffff; border-radius: var(--radius-lg); padding: 3.5rem 2rem; text-align: center; cursor: pointer; transition: all 0.2s ease; margin-bottom: 2rem; }
+    .dropzone:hover, .dropzone.drag-active { border-color: var(--primary); background: #f0f9ff; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; border: none; text-decoration: none; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: var(--bg-subtle); color: var(--text-main); border: 1px solid var(--border-color); }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .flex { display: flex; }
+    .flex-wrap { flex-wrap: wrap; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .flex-col { flex-direction: column; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .gap-5 { gap: 1.25rem; }
+    .gap-6 { gap: 1.5rem; }
+    .space-y-1 > * + * { margin-top: 0.25rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .text-xs { font-size: 0.75rem; }
+    .text-sm { font-size: 0.875rem; }
+    .text-base { font-size: 1rem; }
+    .text-lg { font-size: 1.125rem; }
+    .text-2xl { font-size: 1.5rem; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .font-medium { font-weight: 500; }
+    .text-slate-400 { color: #94a3b8; }
+    .text-slate-500 { color: #64748b; }
+    .text-slate-600 { color: #475569; }
+    .text-slate-700 { color: #334155; }
+    .text-slate-800 { color: #1e293b; }
+    .text-slate-900 { color: #0f172a; }
+    .text-rose-600 { color: #e11d48; }
+    .text-sky-700 { color: #0369a1; }
+    .w-full { width: 100%; }
+    .rounded-full { border-radius: 9999px; }
+    .rounded-lg { border-radius: var(--radius-md); }
+    .p-3 { padding: 0.75rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .border-t { border-top: 1px solid var(--border-color); }
+    .pt-3 { padding-top: 0.75rem; }
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .transform { transform: rotate(-90deg); }
+    .overflow-hidden { overflow: hidden; }
+    .border { border: 1px solid var(--border-color); }
+    .bg-slate-50 { background-color: #f8fafc; }
+    .bg-slate-100 { background-color: #f1f5f9; }
+    .bg-rose-500 { background-color: #f43f5e; }
+    .bg-indigo-500 { background-color: #6366f1; }
+    .bg-sky-500 { background-color: #0ea5e9; }
+    .bg-emerald-500 { background-color: #10b981; }
+    .border-rose-200 { border-color: #fecdd3; }
+    .bg-rose-50 { background-color: #fff1f2; }
+    .text-rose-900 { color: #881337; }
+    .border-amber-200 { border-color: #fde68a; }
+    .bg-amber-50 { background-color: #fffbeb; }
+    .text-amber-900 { color: #78350f; }
+    .border-sky-200 { border-color: #bae6fd; }
+    .bg-sky-50 { background-color: #f0f9ff; }
+    .text-sky-900 { color: #0c4a6e; }
+    @media print { .no-print { display: none !important; } .card { box-shadow: none !important; border: 1px solid #ddd; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <h1 class="brand-title">VoltLens</h1>
+          <p class="brand-tagline">100% Grounded Windows Battery Intelligence Diagnostic</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 no-print">
+        <button id="btn-demo" class="btn btn-secondary text-xs">Load Demo Data</button>
+        <label for="file-input" class="btn btn-primary text-xs cursor-pointer">
+          📁 Select battery-report.html
+          <input type="file" id="file-input" accept=".html,.htm" style="display:none;">
+        </label>
+      </div>
+    </header>
+
+    <!-- Dropzone View (Visible when no data loaded) -->
+    <div id="dropzone-view" class="dropzone no-print">
+      <div class="text-4xl mb-3">🔋</div>
+      <h2 class="text-lg font-bold text-slate-800 mb-1">Drag and drop your battery-report.html here</h2>
+      <p class="text-sm text-slate-500 mb-4">100% Client-Side & Private. Zero data leaves your computer.</p>
+      <div class="inline-flex gap-2">
+        <button onclick="document.getElementById('file-input').click()" class="btn btn-primary text-xs">Browse Local File</button>
+        <button onclick="loadSampleReport()" class="btn btn-secondary text-xs">See Example Report</button>
+      </div>
+      <div class="mt-6 text-xs text-slate-400 max-w-md mx-auto">
+        Don't have the file? Run <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">powercfg /batteryreport</code> in CMD, or double-click <strong>voltlens.bat</strong>.
+      </div>
+    </div>
+
+    <!-- Dashboard View (Populated upon parse) -->
+    <main id="dashboard-view" style="display:none;"></main>
+  </div>
+
+  <!-- Raw Report Injected Placeholder for 1-Click Batch Execution -->
+  <script id="embedded-report-data" type="text/plain">/*INJECT_RAW_REPORT_HERE*/</script>
+
+  <script type="module">
+    import { parseBatteryReport } from './src/parser.js';
+    import { analyzeBatteryReport } from './src/analytics.js';
+    import { renderDashboard } from './src/ui.js';
+
+    window.loadReportHTML = function(htmlText) {
+      try {
+        const data = parseBatteryReport(htmlText);
+        const analysis = analyzeBatteryReport(data);
+        const dashboardHtml = renderDashboard(data, analysis);
+
+        document.getElementById('dropzone-view').style.display = 'none';
+        const dash = document.getElementById('dashboard-view');
+        dash.innerHTML = dashboardHtml;
+        dash.style.display = 'block';
+      } catch (err) {
+        alert('Error parsing battery report: ' + err.message);
+      }
+    };
+
+    window.loadSampleReport = async function() {
+      try {
+        const resp = await fetch('sample/battery-report.html');
+        if (resp.ok) {
+          const text = await resp.text();
+          window.loadReportHTML(text);
+        } else {
+          alert('Sample file not found. Please drag and drop your own battery-report.html.');
+        }
+      } catch (e) {
+        alert('Could not fetch sample. Please drop your battery-report.html file.');
+      }
+    };
+
+    // Auto-load if raw data was injected by batch script
+    document.addEventListener('DOMContentLoaded', () => {
+      const embeddedScript = document.getElementById('embedded-report-data');
+      if (embeddedScript && embeddedScript.textContent && !embeddedScript.textContent.includes('/*INJECT_RAW_REPORT_HERE*/')) {
+        window.loadReportHTML(embeddedScript.textContent);
+      }
+    });
+
+    // File input handler
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => window.loadReportHTML(event.target.result);
+        reader.readAsText(file);
+      }
+    });
+
+    // Drag and drop handlers
+    const dropzone = document.getElementById('dropzone-view');
+    ['dragenter', 'dragover'].forEach(name => {
+      dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('drag-active'); });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+      dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('drag-active'); });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => window.loadReportHTML(event.target.result);
+        reader.readAsText(file);
+      }
+    });
+
+    document.getElementById('btn-demo').addEventListener('click', window.loadSampleReport);
+  </script>
+</body>
+</html>
