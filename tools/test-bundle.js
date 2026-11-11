@@ -2,31 +2,25 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const formatters = fs.readFileSync(path.join(root, 'src', 'formatters.js'), 'utf8');
-const icons = fs.readFileSync(path.join(root, 'src', 'icons.js'), 'utf8');
-const parser = fs.readFileSync(path.join(root, 'src', 'parser.js'), 'utf8');
-const charts = fs.readFileSync(path.join(root, 'src', 'charts.js'), 'utf8');
-const analytics = fs.readFileSync(path.join(root, 'src', 'analytics.js'), 'utf8');
-const ui = fs.readFileSync(path.join(root, 'src', 'ui.js'), 'utf8');
+const standalonePath = path.join(root, 'batdoc-standalone.html');
 
-let code = [formatters, icons, parser, charts, analytics, ui].join('\n\n');
+if (!fs.existsSync(standalonePath)) {
+  console.error('ERROR: batdoc-standalone.html does not exist.');
+  process.exit(1);
+}
 
-code = code.replace(/export\s+function\s+/g, 'function ')
-           .replace(/export\s+const\s+/g, 'const ')
-           .replace(/import\s*\{[\s\S]*?\}\s*from\s*['"][^'"]+['"];?/g, '');
+const html = fs.readFileSync(standalonePath, 'utf8');
+const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
+
+if (!scriptMatch) {
+  console.error('ERROR: No inline script found in batdoc-standalone.html.');
+  process.exit(1);
+}
 
 try {
-  const sandbox = {};
-  const fn = new Function('window', 'document', 'DOMParser', code + '\n' + `
-    return {
-      parseBatteryReport,
-      analyzeBatteryReport,
-      renderDashboard
-    };
-  `);
-
-  console.log('PASS: All code compiles cleanly!');
+  new Function(scriptMatch[1]);
+  console.log('PASS: batdoc-standalone.html compiles with 0 syntax errors!');
 } catch (err) {
-  console.error('COMPILE ERROR:', err);
+  console.error('FAIL: Syntax error in batdoc-standalone.html:', err);
   process.exit(1);
 }

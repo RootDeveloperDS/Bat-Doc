@@ -33,10 +33,9 @@
           <p class="brand-tagline">100% Grounded Windows Battery Intelligence Diagnostic</p>
         </div>
       </div>
-      <div class="header-actions no-print">
-        <button id="btn-demo" class="btn btn-secondary">Load Demo Data</button>
-        <label for="file-input" class="btn btn-primary" style="cursor: pointer;">
-          Select battery-report.html
+      <div id="header-actions" class="header-actions no-print">
+        <label for="file-input" class="btn btn-secondary text-xs" style="cursor: pointer;">
+          Select Report File
           <input type="file" id="file-input" accept=".html,.htm" style="display:none;">
         </label>
       </div>
@@ -54,7 +53,7 @@
       <p style="font-size:0.875rem; color:#64748b; margin-bottom:1.5rem;">100% Client-Side & Offline. Zero network calls, zero tracking.</p>
       <div style="display:inline-flex; gap:0.75rem;">
         <button onclick="document.getElementById('file-input').click()" class="btn btn-primary">Browse Local Report</button>
-        <button onclick="window.loadSampleReport()" class="btn btn-secondary">Explore Live Demo</button>
+        <button onclick="window.loadSampleReport()" class="btn btn-secondary">Explore Sample Report</button>
       </div>
       <div style="margin-top:2rem; font-size:0.8rem; color:#94a3b8; max-width:480px; margin-left:auto; margin-right:auto;">
         Generated via Windows PowerShell or CMD: <code style="background:#f1f5f9; padding:0.2rem 0.5rem; border-radius:6px; color:#334155;">powercfg /batteryreport</code>
@@ -105,6 +104,25 @@
         const dash = document.getElementById('dashboard-view');
         dash.innerHTML = dashboardHtml;
         dash.style.display = 'block';
+
+        // Update header action to clean re-select trigger
+        const headerActions = document.getElementById('header-actions');
+        if (headerActions) {
+          headerActions.innerHTML = `
+            <label for="file-input-reselect" class="btn btn-secondary" style="cursor: pointer; font-size: 0.8rem; padding: 0.45rem 0.9rem;">
+              Analyze Another Report
+              <input type="file" id="file-input-reselect" accept=".html,.htm" style="display:none;">
+            </label>
+          `;
+          document.getElementById('file-input-reselect').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => window.loadReportHTML(event.target.result);
+              reader.readAsText(file);
+            }
+          });
+        }
       } catch (err) {
         alert('Error parsing battery report: ' + err.message);
       }
@@ -138,14 +156,17 @@
     });
 
     // File input handler
-    document.getElementById('file-input').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => window.loadReportHTML(event.target.result);
-        reader.readAsText(file);
-      }
-    });
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => window.loadReportHTML(event.target.result);
+          reader.readAsText(file);
+        }
+      });
+    }
 
     // Drag and drop handlers
     const dropzone = document.getElementById('dropzone-view');
@@ -163,8 +184,6 @@
         reader.readAsText(file);
       }
     });
-
-    document.getElementById('btn-demo').addEventListener('click', window.loadSampleReport);
   </script>
 </body>
 </html>
