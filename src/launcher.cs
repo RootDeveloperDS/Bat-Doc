@@ -1,22 +1,31 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+
+// Assembly metadata for Windows PE verification
+[assembly: AssemblyTitle("BATDOC")]
+[assembly: AssemblyDescription("100% Grounded Windows Battery Intelligence Diagnostic")]
+[assembly: AssemblyCompany("RootDeveloperDS")]
+[assembly: AssemblyProduct("BATDOC")]
+[assembly: AssemblyCopyright("Copyright (c) 2026 RootDeveloperDS")]
+[assembly: AssemblyVersion("1.4.1.0")]
+[assembly: AssemblyFileVersion("1.4.1.0")]
+[assembly: ComVisible(false)]
 
 namespace BatDoc
 {
     static class Program
     {
-        private const string StandaloneUrl = "https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc-standalone.html";
-
         [STAThread]
         static void Main()
         {
             try
             {
-                // 1. Interrogate battery telemetry via Windows powercfg
+                // 1. Interrogate battery hardware telemetry via Windows powercfg
                 string tempDir = Path.GetTempPath();
                 string rawReportPath = Path.Combine(tempDir, "batdoc_raw.html");
 
@@ -46,44 +55,33 @@ namespace BatDoc
                     return;
                 }
 
-                // 2. Resolve template path (local folder first, then temp cache)
-                string appDir = AppDomain.CurrentDomain.BaseDirectory;
-                string templatePath = Path.Combine(appDir, "batdoc-standalone.html");
+                // 2. Load standalone template (prefers embedded resource, with optional local override)
+                string templateContent = null;
+                string localTemplate = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "batdoc-standalone.html");
 
-                if (!File.Exists(templatePath))
+                if (File.Exists(localTemplate))
                 {
-                    templatePath = Path.Combine(appDir, "index.html");
+                    templateContent = File.ReadAllText(localTemplate, Encoding.UTF8);
                 }
-
-                if (!File.Exists(templatePath))
+                else
                 {
-                    string tempTemplate = Path.Combine(tempDir, "batdoc-standalone.html");
-                    if (!File.Exists(tempTemplate))
+                    Assembly asm = typeof(Program).Assembly;
+                    using (Stream stream = asm.GetManifestResourceStream("BatDoc.batdoc-standalone.html"))
                     {
-                        try
+                        if (stream != null)
                         {
-                            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072; // TLS 1.2
-                            using (WebClient client = new WebClient())
+                            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                             {
-                                client.DownloadFile(StandaloneUrl, tempTemplate);
+                                templateContent = reader.ReadToEnd();
                             }
                         }
-                        catch
-                        {
-                            // Network failure handled below if template missing
-                        }
-                    }
-
-                    if (File.Exists(tempTemplate))
-                    {
-                        templatePath = tempTemplate;
                     }
                 }
 
-                if (!File.Exists(templatePath))
+                if (string.IsNullOrEmpty(templateContent))
                 {
                     MessageBox.Show(
-                        "BATDOC standalone template could not be located.\n\nPlease ensure batdoc-standalone.html is in the same folder as batdoc.exe.",
+                        "BATDOC embedded diagnostic template could not be loaded.",
                         "BATDOC Diagnostic",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error
@@ -91,10 +89,9 @@ namespace BatDoc
                     return;
                 }
 
-                // 3. Inject raw report as Base64 payload
+                // 3. Inject raw report as Base64 payload into template
                 byte[] rawBytes = File.ReadAllBytes(rawReportPath);
                 string base64Payload = Convert.ToBase64String(rawBytes);
-                string templateContent = File.ReadAllText(templatePath, Encoding.UTF8);
                 string finalHtml = templateContent.Replace("__RAW_REPORT_BASE64_PAYLOAD__", base64Payload);
 
                 // 4. Resolve real Desktop path (OneDrive-aware)

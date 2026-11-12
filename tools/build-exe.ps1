@@ -4,6 +4,7 @@ $ErrorActionPreference = "Stop"
 $workspace = Split-Path -Parent $PSScriptRoot
 $sourceFile = Join-Path $workspace "src\launcher.cs"
 $iconFile = Join-Path $workspace "assets\icon.ico"
+$resourceFile = Join-Path $workspace "batdoc-standalone.html"
 $outputFile = Join-Path $workspace "batdoc.exe"
 
 $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
@@ -20,6 +21,7 @@ $compileArgs = @(
     "/platform:anycpu",
     "/r:System.Windows.Forms.dll,System.Drawing.dll",
     "/win32icon:$iconFile",
+    "/resource:$resourceFile,BatDoc.batdoc-standalone.html",
     "/out:$outputFile",
     "$sourceFile"
 )

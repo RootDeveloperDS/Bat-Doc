@@ -8,6 +8,6 @@ Commands:
 Installers:
   - Architecture: x64
     InstallerUrl: https://github.com/RootDeveloperDS/Bat-Doc/releases/download/v1.4.1/batdoc.exe
-    InstallerSha256: 7F55DD64752A8C134BA0DA190D08177DE885A527C19E402FC57D64CBE813B1E2
+    InstallerSha256: F9380864C0082E6023705901329EB5DEC90D343EE696BF2B3D00882C77742397
 ManifestType: installer
 ManifestVersion: 1.6.0
