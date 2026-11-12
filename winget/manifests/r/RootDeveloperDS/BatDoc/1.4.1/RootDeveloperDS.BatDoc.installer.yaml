@@ -1,5 +1,5 @@
 ﻿PackageIdentifier: RootDeveloperDS.BatDoc
-PackageVersion: 1.3.0
+PackageVersion: 1.4.1
 InstallerLocale: en-US
 MinimumOSVersion: 10.0.0.0
 InstallerType: portable
@@ -7,7 +7,7 @@ Commands:
   - batdoc
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/RootDeveloperDS/Bat-Doc/releases/download/v1.3.0/batdoc.exe
-    InstallerSha256: 55DD4CC3B6C4DBD272AA599AA3BAAD68C1546FC1CD922EDC28C3EEDC16E3DAFA
+    InstallerUrl: https://github.com/RootDeveloperDS/Bat-Doc/releases/download/v1.4.1/batdoc.exe
+    InstallerSha256: 7F55DD64752A8C134BA0DA190D08177DE885A527C19E402FC57D64CBE813B1E2
 ManifestType: installer
 ManifestVersion: 1.6.0

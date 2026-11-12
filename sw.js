@@ -1,5 +1,5 @@
 // BATDOC Offline Service Worker
-const CACHE_NAME = 'batdoc-v1.2.0';
+const CACHE_NAME = 'batdoc-v1.4.1';
 
 const PRECACHE_ASSETS = [
   './',

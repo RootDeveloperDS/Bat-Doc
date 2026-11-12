@@ -142,7 +142,7 @@ Bat-Doc/
 │   ├── ui.js                   # Executive dashboard rendering engine
 │   └── styles.css              # Executive light design system
 ├── winget/                     # Microsoft Windows Package Manager manifests
-│   └── manifests/r/RootDeveloperDS/BatDoc/1.3.0/
+│   └── manifests/r/RootDeveloperDS/BatDoc/1.4.1/
 │       ├── RootDeveloperDS.BatDoc.version.yaml
 │       ├── RootDeveloperDS.BatDoc.installer.yaml
 │       └── RootDeveloperDS.BatDoc.locale.en-US.yaml

@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 
 $workspace = Split-Path -Parent $PSScriptRoot
 $exePath = Join-Path $workspace "batdoc.exe"
-$manifestDir = Join-Path $workspace "winget\manifests\r\RootDeveloperDS\BatDoc\1.3.0"
+$manifestDir = Join-Path $workspace "winget\manifests\r\RootDeveloperDS\BatDoc\1.4.1"
 $installerYaml = Join-Path $manifestDir "RootDeveloperDS.BatDoc.installer.yaml"
 
 if (Test-Path $exePath) {
