@@ -20,14 +20,24 @@ if (-not (Test-Path $tempRaw)) {
 
 Write-Host "[2/3] Processing 100% truth-grounded diagnostic insights..." -ForegroundColor Yellow
 
-$templatePath = Join-Path $PSScriptRoot "batdoc-standalone.html"
-if (-not (Test-Path $templatePath)) {
-    $templatePath = Join-Path $env:TEMP "batdoc-standalone.html"
-    if (-not (Test-Path $templatePath)) {
+# Locate template (handles in-memory execution via 'irm ... | iex' where $PSScriptRoot is empty)
+$templatePath = ""
+if ($PSScriptRoot) {
+    $localCandidate = Join-Path $PSScriptRoot "batdoc-standalone.html"
+    if (Test-Path $localCandidate) {
+        $templatePath = $localCandidate
+    }
+}
+
+if (-not $templatePath) {
+    $tempCandidate = Join-Path $env:TEMP "batdoc-standalone.html"
+    if (-not (Test-Path $tempCandidate)) {
         Write-Host "[INFO] Fetching standalone diagnostic template..." -ForegroundColor Gray
         $uri = "https://raw.githubusercontent.com/RootDeveloperDS/Bat-Doc/master/batdoc-standalone.html"
-        Invoke-WebRequest -Uri $uri -OutFile $templatePath -UseBasicParsing
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $uri -OutFile $tempCandidate -UseBasicParsing
     }
+    $templatePath = $tempCandidate
 }
 
 $rawBytes = [System.IO.File]::ReadAllBytes($tempRaw)
@@ -35,7 +45,8 @@ $b64 = [Convert]::ToBase64String($rawBytes)
 $templateContent = Get-Content -LiteralPath $templatePath -Raw -Encoding UTF8
 $final = $templateContent.Replace('__RAW_REPORT_BASE64_PAYLOAD__', $b64)
 
-$realDesktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
+# Determine real Desktop folder (OneDrive-aware)
+$realDesktop = [Environment]::GetFolderPath('Desktop')
 if (-not $realDesktop) {
     $realDesktop = Join-Path $env:USERPROFILE "Desktop"
 }
